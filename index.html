@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Space Invaders</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" defer src="./data.js"></script>
+  <script type="module" defer src="./app.js"></script>
+
+</head>
+
+<body>
+  <main>
+
+    <div>
+      <p id="scoreContainer">
+        Score: <span id="scoreEl">0</span>
+      </p>
+    </div>
+
+    <div id="gameContainer">
+      <h1 id="gameTitle" class="hidden">Space Invaders</h1>
+
+      <canvas id="gameCanvas">
+        Your browser does not support the canvas element.
+      </canvas>
+
+      <div id="gameOverContainer" class="hidden">
+        <h2 id="gameOverText">GAME OVER</h2>
+        <p id="restartText">Press Restart</p>
+      </div>
+
+    </div>
+
+    <div id="controls">
+      <button id="restartGameBtn">Restart Game</button>
+    
+      <div id="livesContainer">
+        <img class="life-icon">
+        <img class="life-icon">
+        <img class="life-icon">
+    </div>
+
+      <span id="playerName"></span>
+      <button id="switchPlayerBtn">Switch Player</button>
+    </div>
+
+    
+
+  </main>
+
+</body>
+
+</html>

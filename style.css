@@ -1,0 +1,195 @@
+html, body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+  }
+
+/* Animation for fading in the title */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes fadeScaleIn {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+}
+
+#scoreContainer {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border-radius: 4px;
+    font-family: sans-serif;
+    font-size: 24px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    z-index: 999; /* Always on top */
+}
+
+#gameContainer {
+    position: relative;
+}
+
+#gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+#gameTitle {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Arial', sans-serif;
+    font-size: clamp(24px, 5vw, 48px);
+    color: white;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+    z-index: 1000; /* Make sure it's on top */
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Show and animate only when game is over */
+#gameTitle.show {
+    animation: fadeIn 2s ease-out forwards;
+}
+
+/* Hide by default */
+#gameTitle.hidden {
+    display: none;
+}
+
+#controls {
+    margin-top: 5px;  
+    text-align: center;
+}
+
+#restartGameBtn {
+    position: fixed;
+    bottom: 10px;
+    left: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-family: sans-serif;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+#restartGameBtn:hover {
+    background-color: #c82333;
+}
+
+#playerName {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    font-family: sans-serif;
+    color: white;
+    background-color: rgba(26, 1, 1, 0.5);
+    padding: 6px 12px;
+    border-radius: 6px;
+    z-index: 10;
+}
+
+#switchPlayerBtn {
+    position: fixed;
+    bottom: 10px;    /* distance from bottom edge */
+    right: 20px;     /* distance from right edge */
+    padding: 10px 20px;
+    font-size: 16px;
+    font-family: sans-serif;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+#switchPlayerBtn:hover {
+    background-color: #218838;
+}
+
+#gameOverContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    opacity: 0;
+    pointer-events: none; /* let clicks pass through to buttons if needed */
+    z-index: 20;
+}
+
+#gameOverContainer.show {
+    animation: fadeScaleIn 1s ease-out forwards;
+}
+
+#gameOverText {
+    font-family: 'Arial', sans-serif;
+    font-size: 64px;
+    margin: 0;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+}
+
+#restartText {
+    font-family: 'Arial', sans-serif;
+    font-size: 24px;
+    margin-top: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Lives container positioned near the restart button */
+#livesContainer {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    position: fixed;
+    bottom: 10px;
+    left: 300px; /* adjust as needed, depends on restart button width + padding */
+    z-index: 10;
+}
+
+/* Small life icons */
+.life-icon {
+    width: 30px;
+    height: auto;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5)); /* subtle shadow */
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.1); /* slight background for visibility */
+}
+
+/* Dimmed or lost life */
+.life-icon.lost {
+    opacity: 0.2;
+}
