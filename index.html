@@ -1,56 +1,59 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Space Invaders</title>
-  <link rel="stylesheet" href="style.css">
-  <script type="module" defer src="./data.js"></script>
-  <script type="module" defer src="./app.js"></script>
-
+    <meta charset="UTF-8">
+    <title>Game Intro Screen</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <main>
+    <div class="home-screen">
+        <h1>Space Invaders</h1>
+        <p id="workText">Work In Progress</p>
 
-    <div>
-      <p id="scoreContainer">
-        Score: <span id="scoreEl">0</span>
-      </p>
-    </div>
+        <!-- Intro Video or GIF -->
+        <div class="media-box">
+            <img src = "images/UFO Invasion Grok.png"
+            <video src="intro.mp4" autoplay loop muted></video>
+            <!-- or <img src="intro.gif" alt="Intro"> -->
+        </div>
 
-    <div id="gameContainer">
-      <h1 id="gameTitle" class="hidden">Space Invaders</h1>
+        <!-- Instructions panel -->
+        <div id="instructionsPanel" style="display: none;">
+            <h2>Instructions</h2>
+            <p> Keyboard Control</p>
+            <p> - A/D keys to move left/right</p>
+            <p> - Space key to shoot</p>
+            <p> - M to launch missiles</p>
+            <p> - B to launch nuke</p>
+            <img src="instructions.png" alt="Controls Guide" width="400">
+            <button id="closeInstructionsBtn">Close</button>
+        </div>
 
-      <canvas id="gameCanvas">
-        Your browser does not support the canvas element.
-      </canvas>
-
-      <div id="gameOverContainer" class="hidden">
-        <h2 id="gameOverText">GAME OVER</h2>
-        <p id="restartText">Press Restart</p>
-      </div>
-
-    </div>
-
-    <div id="controls">
-      <button id="restartGameBtn">Restart Game</button>
-    
-      <div id="livesContainer">
-        <img class="life-icon">
-        <img class="life-icon">
-        <img class="life-icon">
-    </div>
-
-      <span id="playerName"></span>
-      <button id="switchPlayerBtn">Switch Player</button>
+        <div class="button-panel">
+            <button id="startGameBtn">Start Game</button>
+            <button id="instructionsBtn">How to Play</button>
+        </div>
     </div>
 
     
 
-  </main>
+    <script>
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            window.open('game.html', '_blank');
+        });
+        document.getElementById('instructionsBtn').addEventListener('click', () => {
+            const panel = document.getElementById('instructionsPanel');
+            panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
+        });
 
+        document.getElementById('closeInstructionsBtn').addEventListener('click', () => {
+            const panel = document.getElementById('instructionsPanel');
+            panel.style.display = 'none';
+        });
+    </script>
 </body>
 
 </html>
