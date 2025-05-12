@@ -70,27 +70,21 @@ const fireBtn = document.getElementById("fireBtn");
 const missileBtn = document.getElementById("missileBtn");
 const nukeBtn = document.getElementById("nukeBtn");
 
+const volumeDisplay = document.getElementById("volumeDisplay");
 const volumeUpBtn = document.getElementById("volumeUpBtn");
 const volumeDownBtn = document.getElementById("volumeDownBtn");
 const muteBtn = document.getElementById("muteBtn");
 
 const bulletLaunchSound = new Audio("./audio/Laser_Gun_SoundFX.mp3");
-bulletLaunchSound.volume = 0.2 * masterVolume; // volume adjustment (0.0 - 1.0)
 const missileLaunchSound = new Audio("./audio/Missile_Launch_SoundFX.mp3");
-missileLaunchSound.volume = 0.5 * masterVolume; // volume adjustment (0.0 - 1.0)
 const nukeLaunchSound = new Audio("./audio/Nuclear_Blast_SoundFX.mp3");
-nukeLaunchSound.volume = 1.0 * masterVolume; // volume adjustment (0.0 - 1.0)
 
 const playerExplosionSound = new Audio(
   "./audio/Player_Space_Explosion_Reverb.mp3"
 );
-playerExplosionSound.volume = 0.7 * masterVolume; // volume adjustment (0.0 - 1.0)
 const playerKilledSound = new Audio("./audio/Player_Killed_Explosion.mp3");
-playerKilledSound.volume = 1.0 * masterVolume; // volume adjustment (0.0 - 1.0)
 const alienExplosionSound = new Audio("./audio/Alien_Explosion_SFX.mp3");
-alienExplosionSound.volume = 0.7 * masterVolume; // volume adjustment (0.0 - 1.0)
 const missileExplosionSound = new Audio("./audio/Missile_Explosion_SFX.mp3");
-missileExplosionSound.volume = 0.7 * masterVolume; // volume adjustment (0.0 - 1.0)
 
 const backgroundMusic = new Audio(
   "./audio/Background_Spaceship_Texture_SFX.mp3"
@@ -98,9 +92,6 @@ const backgroundMusic = new Audio(
 backgroundMusic.loop = true; // Loop forever
 backgroundMusic.volume = 0.4 * masterVolume; // Adjust volume (0.0 - 1.0)
 backgroundMusic.preload = "auto"; // Preload for smoother start
-
-
-
 
 // Only present on home.html:
 const startBtn = document.getElementById("startBtn");
@@ -132,7 +123,7 @@ class Player {
       this.position.y = canvas.height - this.height - 70;
       updateLivesDisplay();
       cancelAnimationFrame(animationId);
-      animate()
+      animate();
     };
   }
 
@@ -389,17 +380,17 @@ class Missile {
       this.height
     );
 
-      // Rounded nose tip (semi-circle)
-  ctx.beginPath();
-  ctx.arc(
-    this.position.x,                          // center x
-    this.position.y - this.height,            // center y at top of missile
-    this.width / 2,                           // radius equals half width
-    Math.PI,                                  // start angle (180°)
-    2 * Math.PI                               // end angle (360°)
-  );
-  ctx.fill();
-  ctx.closePath();
+    // Rounded nose tip (semi-circle)
+    ctx.beginPath();
+    ctx.arc(
+      this.position.x, // center x
+      this.position.y - this.height, // center y at top of missile
+      this.width / 2, // radius equals half width
+      Math.PI, // start angle (180°)
+      2 * Math.PI // end angle (360°)
+    );
+    ctx.fill();
+    ctx.closePath();
 
     this.trail.forEach((t) => {
       ctx.globalAlpha = t.alpha;
@@ -801,10 +792,9 @@ function handleKey(key) {
     case "v":
       keys.v.pressed = true;
       // new: switch aircraft on 'v'
-  if (key === 'v') {
-    player.switchPlayer();  
-  }
-
+      if (key === "v") {
+        player.switchPlayer();
+      }
   }
 }
 
@@ -849,61 +839,7 @@ function handleMobileNuke() {
   launchNuke(); // assuming you have this defined elsewhere
 }
 
-
-// Volume Control Handlers------------------------------------------------------------------------
-
-function increaseVolume() {
-  if (backgroundMusic.volume < 1 && !muted) {
-    backgroundMusic.volume = Math.min(1, backgroundMusic.volume + 0.1);
-  }
-}
-
-function decreaseVolume() {
-  if (backgroundMusic.volume > 0 && !muted) {
-    backgroundMusic.volume = Math.max(0, backgroundMusic.volume - 0.1);
-  }
-}
-
-function toggleMute() {
-  muted = !muted;
-  backgroundMusic.muted = muted;
-  muteBtn.textContent = muted ? "🔈" : "🔇";
-}
-
-function animateButton(button) {
-  button.classList.add("volume-clicked");
-  setTimeout(() => {
-    button.classList.remove("volume-clicked");
-  }, 100); // 100ms pulse
-}
-
-/*--------------------------- Canvas Resized ---------------------------*/
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  if (player && player.image) {
-    player.position.x = canvas.width / 2 - player.width / 2;
-    player.position.y = canvas.height - player.height - 30;
-  }
-}
-
-  /*--------------------------- Stars ---------------------------*/
-
-  function initStars() {
-    stars.length = 0;
-    for (let i = 0; i < starCount; i++) {
-      stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 0.5,
-        velocity: { x: 0, y: 0.5 },
-        alpha: Math.random(),
-        alphaChange: Math.random() * 0.02 + 0.005,
-      });
-    }
-  }
-
-/*------------------------- Audio --------------------------------------*/
+/*----------------- Audio & Volume Control Handlers-----------------------------------------------------*/
 
 function setupAudio() {
   if (isHomeScreen) {
@@ -934,7 +870,7 @@ function startGame() {
       .catch((err) => console.warn("Game-music autoplay blocked:", err));
   }
 
-  // …plus whatever your existing “begin game” logic is:
+  // …plus whatever existing “begin game” logic is:
   initGameLoop();
 }
 
@@ -949,34 +885,83 @@ function applyMasterVolume() {
   backgroundMusic.volume = 0.4 * masterVolume;
 }
 
-// function increaseVolume() {
-//   if (masterVolume < 1) {
-//     masterVolume = Math.min(1, masterVolume + 0.1);
-//     applyMasterVolume();
-//   }
-// }
+function updateVolumeDisplay() {
+  if (muted) {
+    volumeDisplay.textContent = "Muted";
+  } else {  
+  volumeDisplay.textContent = Math.round(masterVolume * 100);
+}
+}
 
-// function decreaseVolume() {
-//   if (masterVolume > 0) {
-//     masterVolume = Math.max(0, masterVolume - 0.1);
-//     applyMasterVolume();
-//   }
-// }
+function increaseVolume() {
+  if (masterVolume < 1 && !muted) {
+    masterVolume = Math.min(1, masterVolume + 0.1);
+    applyMasterVolume();
+    updateVolumeDisplay();
+  }
+}
 
-// function toggleMute() {
-//   muted = !muted;
-//   backgroundMusic.muted = muted;
-//   [bulletLaunchSound, missileLaunchSound, nukeLaunchSound,
-//    playerExplosionSound, playerKilledSound, alienExplosionSound,
-//    missileExplosionSound].forEach(sound => {
-//     sound.muted = muted;
-//   });
-//   muteBtn.textContent = muted ? "🔈" : "🔇";
-// }
+function decreaseVolume() {
+  if (masterVolume > 0 && !muted) {
+    masterVolume = Math.max(0, masterVolume - 0.1);
+    applyMasterVolume();
+    updateVolumeDisplay();
+  }
+}
+
+function toggleMute() {
+  muted = !muted;
+  const allSounds = [
+    bulletLaunchSound,
+    missileLaunchSound,
+    nukeLaunchSound,
+    playerExplosionSound,
+    playerKilledSound,
+    alienExplosionSound,
+    missileExplosionSound,
+    backgroundMusic,
+  ];
+  allSounds.forEach(sound => sound.muted = muted);
+  muteBtn.textContent = muted ? "🔈" : "🔇";
+  updateVolumeDisplay();
+}
+
+function animateButton(button) {
+  button.classList.add("volume-clicked");
+  setTimeout(() => {
+    button.classList.remove("volume-clicked");
+  }, 100);
+}
+/*--------------------------- Canvas Resized ---------------------------*/
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  if (player && player.image) {
+    player.position.x = canvas.width / 2 - player.width / 2;
+    player.position.y = canvas.height - player.height - 30;
+  }
+}
+
+/*--------------------------- Stars ---------------------------*/
+
+function initStars() {
+  stars.length = 0;
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 0.5,
+      velocity: { x: 0, y: 0.5 },
+      alpha: Math.random(),
+      alphaChange: Math.random() * 0.02 + 0.005,
+    });
+  }
+}
+
 /*-------------------------------- Functions | High Score Display --------------------------------*/
 
 function fmt(n) {
-  return n.toLocaleString(); 
+  return n.toLocaleString();
 }
 
 function loadHighScore() {
@@ -1035,17 +1020,16 @@ function spawnAlienWave() {
   }
 }
 
-  // Set waiting flag and spawn grid after delay
-  waitingForFirstWave = true;
-   setTimeout(() => {
-       grids.push(new Grid(aliens[Math.floor(Math.random() * aliens.length)]));
-       waitingForFirstWave = false;
-   }, 2000); // 2 seconds delay
+// Set waiting flag and spawn grid after delay
+waitingForFirstWave = true;
+setTimeout(() => {
+  grids.push(new Grid(aliens[Math.floor(Math.random() * aliens.length)]));
+  waitingForFirstWave = false;
+}, 2000); // 2 seconds delay
 
-
-  //  if (!isGameAnimating) {
-  //   cancelAnimationFrame(animate)
-  // }
+//  if (!isGameAnimating) {
+//   cancelAnimationFrame(animate)
+// }
 
 /*--------------------------- Bullet Firing Angle relative to player direction ---------------------------*/
 function getRotatedPoint(px, py, cx, cy, angle) {
@@ -1142,9 +1126,9 @@ function restartGame() {
 
   // Alien spawn after delay
   waitingForFirstWave = true;
-setTimeout(() => {
-  spawnAlienWave();
-}, 2000); // Delay first wave by 2 seconds
+  setTimeout(() => {
+    spawnAlienWave();
+  }, 2000); // Delay first wave by 2 seconds
 
   animate();
 }
@@ -1416,7 +1400,11 @@ function animate() {
 
   /*-------------------------------- Functions Animate | Alien Spawning --------------------------------*/
   // Spawning Alien Grids with delayed update
-  if (!waitingForFirstWave && grids.length === 0 && frames % randomInterval === 0) {
+  if (
+    !waitingForFirstWave &&
+    grids.length === 0 &&
+    frames % randomInterval === 0
+  ) {
     spawnAlienWave();
     randomInterval = Math.floor(Math.random() * 500 + 500);
     frames = 0;
@@ -1425,14 +1413,14 @@ function animate() {
   // Updating Grids, Aliens and Collisions
   grids.forEach((grid, gridIndex) => {
     if (!game.over && !game.paused) {
-    grid.update();
+      grid.update();
 
-    if (frames % 100 === 0 && grid.aliens.length > 0) {
-      grid.aliens[Math.floor(Math.random() * grid.aliens.length)].shoot(
-        alienBullets
-      );
+      if (frames % 100 === 0 && grid.aliens.length > 0) {
+        grid.aliens[Math.floor(Math.random() * grid.aliens.length)].shoot(
+          alienBullets
+        );
+      }
     }
-  }
 
     grid.aliens.forEach((alien, i) => {
       alien.update({ velocity: grid.velocity });
@@ -1588,12 +1576,88 @@ function animate() {
 
 /*----------------------------- Event Listeners -------------------------------*/
 
+//----------------------------- Event Listeners | DOM Content Loading -----------
+
+window.addEventListener("DOMContentLoaded", () => {
+  initBackgroundMusicOnce();
+  resizeCanvas();
+  initStars();
+  updateNukeDisplay(); // Update nuke display on load
+  loadHighScore(); // Pull high score from localStorage
+  applyMasterVolume(); // Apply initial volume settings
+  updateVolumeDisplay(); // Update volume display on load
+
+  window.addEventListener("resize", resizeCanvas);
+  window.addEventListener("orientationchange", resizeCanvas);
+});
+
+/*------------------------------- Event Listeners | Volume Buttons --------------------------------*/
+
+volumeUpBtn.addEventListener("click", () => {
+  increaseVolume();
+  animateButton(volumeUpBtn);
+});
+
+volumeDownBtn.addEventListener("click", () => {
+  decreaseVolume();
+  animateButton(volumeDownBtn);
+});
+
+muteBtn.addEventListener("click", () => {
+  toggleMute();
+  animateButton(muteBtn);
+});
+
+//----------------------------- Event Listeners | Game Control Buttons ----------------------
+
+switchBtn.addEventListener("click", () => player.switchPlayer());
+restartBtn.addEventListener("click", restartGame);
+
+//----------------------------- Event Listeners | Keyboard Input ---------------------------
+
+addEventListener("keydown", (event) => {
+  console.log("Key pressed:", event.key);
+  handleKey(event.key);
+});
+
+addEventListener("keyup", (event) => {
+  handleKeyRelease(event.key);
+});
+
+//-------------------- Event Listeners | Mobile Controls: Tap Trigger Background Music --
+
+canvas.addEventListener("touchstart", tryPlay);
+
+//-------------------- Event Listeners | Mobile Button Presses -----------------------------
+
+leftBtn.addEventListener("touchstart", () => handleHoldStart("a", leftBtn));
+leftBtn.addEventListener("mousedown", () => handleHoldStart("a", leftBtn));
+leftBtn.addEventListener("touchend", () => handleHoldEnd("a", leftBtn));
+leftBtn.addEventListener("mouseup", () => handleHoldEnd("a", leftBtn));
+leftBtn.addEventListener("mouseleave", () => handleHoldEnd("a", leftBtn));
+
+rightBtn.addEventListener("touchstart", () => handleHoldStart("d", rightBtn));
+rightBtn.addEventListener("mousedown", () => handleHoldStart("d", rightBtn));
+rightBtn.addEventListener("touchend", () => handleHoldEnd("d", rightBtn));
+rightBtn.addEventListener("mouseup", () => handleHoldEnd("d", rightBtn));
+rightBtn.addEventListener("mouseleave", () => handleHoldEnd("d", rightBtn));
+
+leftBtn.addEventListener("click", () => {
+  handleKey("a");
+  setTimeout(() => handleKeyRelease("a"), 100);
+});
+
+rightBtn.addEventListener("click", () => {
+  handleKey("d");
+  setTimeout(() => handleKeyRelease("d"), 100);
+});
+
+fireBtn.addEventListener("touchstart", handleMobileFire);
+missileBtn.addEventListener("touchstart", handleMobileMissile);
+nukeBtn.addEventListener("touchstart", handleMobileNuke);
+
 //----------------------------- Event Listeners | Audio ----------------------
 
-// As soon as DOM is ready, set up the right audio
-// window.addEventListener('DOMContentLoaded', setupAudio); ### CHECK and see if this works
-
-// Wire your “Start” button to both stop home music and launch the game
 if (startBtn) {
   startBtn.addEventListener("click", startGame);
 }
@@ -1616,113 +1680,6 @@ function initBackgroundMusicOnce() {
   window.addEventListener("touchstart", playMusic);
 }
 
-//----------------------------- Event Listeners | DOM Content Loading -----------
-
-window.addEventListener("DOMContentLoaded", () => {
-  initBackgroundMusicOnce();
-  resizeCanvas();
-  initStars();
-  updateNukeDisplay(); // Update nuke display on load
-  loadHighScore();
-  window.addEventListener("resize", resizeCanvas);
-  window.addEventListener("orientationchange", resizeCanvas);
-  initStars();
-});
-
-//----------------------------- Event Listeners | Buttons ----------------------
-
-switchBtn.addEventListener("click", () => player.switchPlayer());
-restartBtn.addEventListener("click", restartGame);
-
-//----------------------------- Event Listeners | Key Presses ------------------
-addEventListener("keydown", (event) => {
-  console.log("Key pressed:", event.key);
-  handleKey(event.key);
-});
-
-addEventListener("keyup", (event) => {
-  handleKeyRelease(event.key);
-});
-
-
-//----------------------------- Event Listeners | Mobile Controls -------------
-
-canvas.addEventListener("touchstart", tryPlay);
-
-document.getElementById("leftBtn").addEventListener("touchstart", () => {
-  keys.a.pressed = true;
-});
-document.getElementById("leftBtn").addEventListener("touchend", () => {
-  keys.a.pressed = false;
-});
-
-document.getElementById("rightBtn").addEventListener("touchstart", () => {
-  keys.d.pressed = true;
-});
-document.getElementById("rightBtn").addEventListener("touchend", () => {
-  keys.d.pressed = false;
-});
-
-document.getElementById("fireBtn").addEventListener("touchstart", () => {
-  handleKey(" ");
-});
-
-// add missing buttons ## CHECK
-
-//touch event listeners for mobile controls
-
-leftBtn.addEventListener("touchstart", () => handleHoldStart("a", leftBtn));
-leftBtn.addEventListener("mousedown", () => handleHoldStart("a", leftBtn));
-
-leftBtn.addEventListener("touchend", () => handleHoldEnd("a", leftBtn));
-leftBtn.addEventListener("mouseup", () => handleHoldEnd("a", leftBtn));
-leftBtn.addEventListener("mouseleave", () => handleHoldEnd("a", leftBtn));
-
-rightBtn.addEventListener("touchstart", () => handleHoldStart("d", rightBtn));
-rightBtn.addEventListener("mousedown", () => handleHoldStart("d", rightBtn));
-
-rightBtn.addEventListener("touchend", () => handleHoldEnd("d", rightBtn));
-rightBtn.addEventListener("mouseup", () => handleHoldEnd("d", rightBtn));
-rightBtn.addEventListener("mouseleave", () => handleHoldEnd("d", rightBtn));
-
-leftBtn.addEventListener("click", () => {
-  handleKey("a");
-  // briefly simulate key release after a short delay
-  setTimeout(() => handleKeyRelease("a"), 100);
-});
-
-rightBtn.addEventListener("click", () => {
-  handleKey("d");
-  setTimeout(() => handleKeyRelease("d"), 100);
-});
-
-
-fireBtn.addEventListener("touchstart", handleMobileFire);
-missileBtn.addEventListener("touchstart", handleMobileMissile);
-nukeBtn.addEventListener("touchstart", handleMobileNuke);
-
-volumeUpBtn.addEventListener("click", () => {
-  increaseVolume();
-  animateButton(volumeUpBtn);
-});
-
-volumeDownBtn.addEventListener("click", () => {
-  decreaseVolume();
-  animateButton(volumeDownBtn);
-});
-
-muteBtn.addEventListener("click", () => {
-  toggleMute();
-  animateButton(muteBtn);
-});
-
-//----------------------------- Event Listeners | Load High Score  -------------
-
-window.addEventListener("DOMContentLoaded", () => {
-  loadHighScore();
-});
-
 /*------------------------------- Initial Call --------------------------------*/
-//--------------------Game Loop -------------------------------------------
-// window.focus();
+// Start the animation loop
 animate();

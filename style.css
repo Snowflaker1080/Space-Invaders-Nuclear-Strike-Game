@@ -219,7 +219,7 @@ body {
 
 #highScoreContainer {
     position: absolute;
-    top: 3%;
+    top: 5%;
     right: 1%;
     padding: 8px 12px;
     background-color: rgba(0, 0, 0, 0.1);
@@ -527,7 +527,7 @@ body {
     top: 1%;
     right: 15%;
     display: flex;
-    gap: clamp(10px, 10vw, 30px);
+    gap: clamp(10px, 8vw, 20px);
     z-index: 2000;
   }
 
@@ -549,6 +549,20 @@ body {
 
   #volumeContainer button:hover {
     background-color: #888;
+  }
+
+  #volumeContainer span {
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(10px, 2vw, 18px);
+    border-radius: 5%; 
+    width: 60x;
+    height: 50px;
+    background-color: #000;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   }
 
   /* Visual feedback class */
