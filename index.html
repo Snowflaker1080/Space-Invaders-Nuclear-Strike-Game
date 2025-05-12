@@ -2,24 +2,26 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<canvas id="spaceCanvas"></canvas>
+
 <head>
     <meta charset="UTF-8">
     <title>Space Invaders</title>
     <link rel="stylesheet" href="style.css">
     <script type="module" defer src="./data.js"></script>
     <script type="module" defer src="./app.js"></script>
+    <script type="module" defer src="./index.js"></script>
 </head>
 
 <body>
     <div class="home-screen">
         <h1>Space Invaders</h1>
-
-        <!-- Intro Video or GIF -->
-        <div class="media-box">
-            <img src = "images/UFO Invasion Grok.png"
-            <video src="intro.mp4" autoplay loop muted></video>
-            <!-- or <img src="intro.gif" alt="Intro"> -->
-        </div>
+<!-- Intro Video or GIF -->
+<div class="media-box">
+    <img src="images/UFO Invasion Grok.png"></img>
+    <video src="intro.mp4" autoplay loop muted></video>
+    <!-- or <img src="intro.gif" alt="Intro"> -->
+</div>
 
         <audio src="./audio/Intro_Background_SFX.mp3" autoplay loop id="homeAudio">
             Your browser doesn’t support audio.
@@ -55,10 +57,8 @@
             <button id="startGameBtn">Start Game</button>
             <button id="instructionsBtn">How to Play</button>
         </div>
-    </div>
-
-    
-
+    </div>  
+ 
     <script>
         document.getElementById('startGameBtn').addEventListener('click', () => {
             window.open('game.html', '_blank');

@@ -794,8 +794,8 @@ function handleKeyRelease(key) {
 
 /*--------------------------- Canvas Resized ---------------------------*/
 function resizeCanvas() {
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
   stars.length = 0;
   /*--------------------------- Stars ---------------------------*/
 
@@ -1507,6 +1507,7 @@ window.addEventListener("DOMContentLoaded", () => {
   updateNukeDisplay(); // Update nuke display on load
   loadHighScore();
   window.addEventListener("resize", resizeCanvas);
+  window.addEventListener("orientationchange", resizeCanvas);
 });
 
 //----------------------------- Event Listeners | Buttons ----------------------
@@ -1523,6 +1524,31 @@ addEventListener("keydown", (event) => {
 addEventListener("keyup", (event) => {
   handleKeyRelease(event.key);
 });
+
+
+//----------------------------- Event Listeners | Mobile Controls -------------
+
+canvas.addEventListener("touchstart", tryPlay);
+
+document.getElementById("leftBtn").addEventListener("touchstart", () => {
+  keys.a.pressed = true;
+});
+document.getElementById("leftBtn").addEventListener("touchend", () => {
+  keys.a.pressed = false;
+});
+
+document.getElementById("rightBtn").addEventListener("touchstart", () => {
+  keys.d.pressed = true;
+});
+document.getElementById("rightBtn").addEventListener("touchend", () => {
+  keys.d.pressed = false;
+});
+
+document.getElementById("fireBtn").addEventListener("touchstart", () => {
+  handleKey(" ");
+});
+
+// add missing buttons ## CHECK
 
 //----------------------------- Event Listeners | Load High Score  -------------
 
