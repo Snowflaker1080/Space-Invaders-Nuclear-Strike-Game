@@ -5,6 +5,7 @@ const alienBullets = [];
 const bullets = [];
 const explosions = [];
 const grids = [];
+const keyHoldIntervals = {}; // mobile controls
 const missiles = [];
 const muzzleFlashes = [];
 const muzzleSmokePuffs = [];
@@ -34,6 +35,8 @@ let playerLives = 3;
 let homeMusic = null;
 let gameMusic = null;
 let frames = 0;
+let masterVolume = 1.0;
+let muted = false;
 let nukesRemaining = nuke_limit;
 let randomInterval = Math.floor(Math.random() * 500 + 500);
 let game = {
@@ -60,30 +63,44 @@ const playerNameEl = document.getElementById("playerName");
 const gameTitleEl = document.getElementById("gameTitle");
 const gameOverContainer = document.getElementById("gameOverContainer");
 
+// mobile controls
+const leftBtn = document.getElementById("leftBtn");
+const rightBtn = document.getElementById("rightBtn");
+const fireBtn = document.getElementById("fireBtn");
+const missileBtn = document.getElementById("missileBtn");
+const nukeBtn = document.getElementById("nukeBtn");
+
+const volumeUpBtn = document.getElementById("volumeUpBtn");
+const volumeDownBtn = document.getElementById("volumeDownBtn");
+const muteBtn = document.getElementById("muteBtn");
+
 const bulletLaunchSound = new Audio("./audio/Laser_Gun_SoundFX.mp3");
-bulletLaunchSound.volume = 0.2; // optional volume adjustment (0.0 - 1.0)
+bulletLaunchSound.volume = 0.2 * masterVolume; // volume adjustment (0.0 - 1.0)
 const missileLaunchSound = new Audio("./audio/Missile_Launch_SoundFX.mp3");
-missileLaunchSound.volume = 0.2; // optional volume adjustment (0.0 - 1.0)
+missileLaunchSound.volume = 0.5 * masterVolume; // volume adjustment (0.0 - 1.0)
 const nukeLaunchSound = new Audio("./audio/Nuclear_Blast_SoundFX.mp3");
-nukeLaunchSound.volume = 1.0; // optional volume adjustment (0.0 - 1.0)
+nukeLaunchSound.volume = 1.0 * masterVolume; // volume adjustment (0.0 - 1.0)
 
 const playerExplosionSound = new Audio(
   "./audio/Player_Space_Explosion_Reverb.mp3"
 );
-playerExplosionSound.volume = 0.7; // optional volume adjustment (0.0 - 1.0)
+playerExplosionSound.volume = 0.7 * masterVolume; // volume adjustment (0.0 - 1.0)
 const playerKilledSound = new Audio("./audio/Player_Killed_Explosion.mp3");
-playerKilledSound.volume = 1.0; // optional volume adjustment (0.0 - 1.0)
+playerKilledSound.volume = 1.0 * masterVolume; // volume adjustment (0.0 - 1.0)
 const alienExplosionSound = new Audio("./audio/Alien_Explosion_SFX.mp3");
-alienExplosionSound.volume = 0.7; // optional volume adjustment (0.0 - 1.0)
+alienExplosionSound.volume = 0.7 * masterVolume; // volume adjustment (0.0 - 1.0)
 const missileExplosionSound = new Audio("./audio/Missile_Explosion_SFX.mp3");
-missileExplosionSound.volume = 0.7; // optional volume adjustment (0.0 - 1.0)
+missileExplosionSound.volume = 0.7 * masterVolume; // volume adjustment (0.0 - 1.0)
 
 const backgroundMusic = new Audio(
   "./audio/Background_Spaceship_Texture_SFX.mp3"
 );
 backgroundMusic.loop = true; // Loop forever
-backgroundMusic.volume = 0.4; // Adjust volume (0.0 - 1.0)
+backgroundMusic.volume = 0.4 * masterVolume; // Adjust volume (0.0 - 1.0)
 backgroundMusic.preload = "auto"; // Preload for smoother start
+
+
+
 
 // Only present on home.html:
 const startBtn = document.getElementById("startBtn");
@@ -114,6 +131,8 @@ class Player {
       this.position.x = canvas.width / 2 - this.width / 2;
       this.position.y = canvas.height - this.height - 70;
       updateLivesDisplay();
+      cancelAnimationFrame(animationId);
+      animate()
     };
   }
 
@@ -369,6 +388,18 @@ class Missile {
       this.width,
       this.height
     );
+
+      // Rounded nose tip (semi-circle)
+  ctx.beginPath();
+  ctx.arc(
+    this.position.x,                          // center x
+    this.position.y - this.height,            // center y at top of missile
+    this.width / 2,                           // radius equals half width
+    Math.PI,                                  // start angle (180°)
+    2 * Math.PI                               // end angle (360°)
+  );
+  ctx.fill();
+  ctx.closePath();
 
     this.trail.forEach((t) => {
       ctx.globalAlpha = t.alpha;
@@ -650,7 +681,6 @@ class Detonation {
 
 const player = new Player();
 updateLivesDisplay();
-grids.push(new Grid(aliens[Math.floor(Math.random() * aliens.length)]));
 
 /*---------------------------------------------------------------------------------------*/
 /*---------------------------------------- Functions ------------------------------------*/
@@ -700,7 +730,7 @@ function handleKey(key) {
 
     case "m":
       // Play missile launch sound
-      missileLaunchSound.currentTime = 1.0; // rewind if already playing
+      missileLaunchSound.currentTime = 0.0; // rewind if already playing
       missileLaunchSound.play();
 
       const nextPattern = Missile.nextPattern();
@@ -734,7 +764,7 @@ function handleKey(key) {
       keys.space.pressed = true;
 
       // Play bullet launch sound
-      bulletLaunchSound.currentTime = 1.0; // rewind if already playing
+      bulletLaunchSound.currentTime = 0.0;
       bulletLaunchSound.play();
 
       if (player.image) {
@@ -790,42 +820,88 @@ function handleKeyRelease(key) {
     keys.space.pressed = false;
 }
 
-// Set Nuke out function .....
+//mobile controls handlers ------------------------------------------------------------------------
+
+function handleHoldStart(key, buttonEl) {
+  handleKey(key);
+  buttonEl.classList.add("pressed");
+  keyHoldIntervals[key] = setInterval(() => handleKey(key), 50); // keep simulating key hold
+}
+
+function handleHoldEnd(key, buttonEl) {
+  clearInterval(keyHoldIntervals[key]);
+  handleKeyRelease(key);
+  buttonEl.classList.remove("pressed");
+}
+
+function handleMobileFire() {
+  keys.space.pressed = true;
+  setTimeout(() => (keys.space.pressed = false), 100);
+}
+
+function handleMobileMissile() {
+  keys.m.pressed = true;
+  setTimeout(() => (keys.m.pressed = false), 100);
+}
+
+function handleMobileNuke() {
+  // Replace with nuke action function or key simulation if applicable
+  launchNuke(); // assuming you have this defined elsewhere
+}
+
+
+// Volume Control Handlers------------------------------------------------------------------------
+
+function increaseVolume() {
+  if (backgroundMusic.volume < 1 && !muted) {
+    backgroundMusic.volume = Math.min(1, backgroundMusic.volume + 0.1);
+  }
+}
+
+function decreaseVolume() {
+  if (backgroundMusic.volume > 0 && !muted) {
+    backgroundMusic.volume = Math.max(0, backgroundMusic.volume - 0.1);
+  }
+}
+
+function toggleMute() {
+  muted = !muted;
+  backgroundMusic.muted = muted;
+  muteBtn.textContent = muted ? "🔈" : "🔇";
+}
+
+function animateButton(button) {
+  button.classList.add("volume-clicked");
+  setTimeout(() => {
+    button.classList.remove("volume-clicked");
+  }, 100); // 100ms pulse
+}
 
 /*--------------------------- Canvas Resized ---------------------------*/
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  stars.length = 0;
-  /*--------------------------- Stars ---------------------------*/
-
-  // Reposition stars inside new canvas size
-  stars.forEach((star) => {
-    star.x = Math.random() * canvas.width;
-    star.y = Math.random() * canvas.height;
-  });
-
-  // star background
-  for (let i = 0; i < starCount; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      radius: Math.random() * 2 + 0.5,
-      velocity: {
-        x: 0,
-        y: 0.5, // star downwards movement
-      },
-      alpha: Math.random(),
-      alphaChange: Math.random() * 0.02 + 0.005, // speed of twinkle
-    });
-  }
-
-  // Keep player at bottom and centered when window resizes
-  if (player.image) {
+  if (player && player.image) {
     player.position.x = canvas.width / 2 - player.width / 2;
-    player.position.y = canvas.height - player.height - 30; // 30px bottom margin
+    player.position.y = canvas.height - player.height - 30;
   }
 }
+
+  /*--------------------------- Stars ---------------------------*/
+
+  function initStars() {
+    stars.length = 0;
+    for (let i = 0; i < starCount; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 0.5,
+        velocity: { x: 0, y: 0.5 },
+        alpha: Math.random(),
+        alphaChange: Math.random() * 0.02 + 0.005,
+      });
+    }
+  }
 
 /*------------------------- Audio --------------------------------------*/
 
@@ -862,10 +938,45 @@ function startGame() {
   initGameLoop();
 }
 
+function applyMasterVolume() {
+  bulletLaunchSound.volume = 0.2 * masterVolume;
+  missileLaunchSound.volume = 0.5 * masterVolume;
+  nukeLaunchSound.volume = 1.0 * masterVolume;
+  playerExplosionSound.volume = 0.7 * masterVolume;
+  playerKilledSound.volume = 1.0 * masterVolume;
+  alienExplosionSound.volume = 0.7 * masterVolume;
+  missileExplosionSound.volume = 0.7 * masterVolume;
+  backgroundMusic.volume = 0.4 * masterVolume;
+}
+
+// function increaseVolume() {
+//   if (masterVolume < 1) {
+//     masterVolume = Math.min(1, masterVolume + 0.1);
+//     applyMasterVolume();
+//   }
+// }
+
+// function decreaseVolume() {
+//   if (masterVolume > 0) {
+//     masterVolume = Math.max(0, masterVolume - 0.1);
+//     applyMasterVolume();
+//   }
+// }
+
+// function toggleMute() {
+//   muted = !muted;
+//   backgroundMusic.muted = muted;
+//   [bulletLaunchSound, missileLaunchSound, nukeLaunchSound,
+//    playerExplosionSound, playerKilledSound, alienExplosionSound,
+//    missileExplosionSound].forEach(sound => {
+//     sound.muted = muted;
+//   });
+//   muteBtn.textContent = muted ? "🔈" : "🔇";
+// }
 /*-------------------------------- Functions | High Score Display --------------------------------*/
 
 function fmt(n) {
-  return n.toLocaleString(); // or: new Intl.NumberFormat('en-GB').format(n);
+  return n.toLocaleString(); 
 }
 
 function loadHighScore() {
@@ -911,6 +1022,30 @@ function enableBackgroundMusicOnce() {
   window.addEventListener("mousedown", tryPlay);
   window.addEventListener("touchstart", tryPlay);
 }
+
+/*--------------------------- Spawn Alien Wave ---------------------------------*/
+function spawnAlienWave() {
+  const randomAlienType = aliens[Math.floor(Math.random() * aliens.length)];
+  if (randomAlienType) {
+    grids.push(new Grid(randomAlienType));
+    waitingForFirstWave = false;
+    console.log("Alien wave spawned");
+  } else {
+    console.warn("Aliens array is empty or invalid!");
+  }
+}
+
+  // Set waiting flag and spawn grid after delay
+  waitingForFirstWave = true;
+   setTimeout(() => {
+       grids.push(new Grid(aliens[Math.floor(Math.random() * aliens.length)]));
+       waitingForFirstWave = false;
+   }, 2000); // 2 seconds delay
+
+
+  //  if (!isGameAnimating) {
+  //   cancelAnimationFrame(animate)
+  // }
 
 /*--------------------------- Bullet Firing Angle relative to player direction ---------------------------*/
 function getRotatedPoint(px, py, cx, cy, angle) {
@@ -982,12 +1117,13 @@ function restartGame() {
   // Clear bullets and flashes
   alienBullets.length = 0;
   bullets.length = 0;
+  explosions.length = 0;
   missiles.length = 0;
   muzzleFlashes.length = 0;
-  explosions.length = 0;
+  muzzleSmokePuffs.length = 0;
   nukeProjectiles.length = 0;
-  alienBullets.length = 0;
   grids.length = 0;
+
   nukesRemaining = nuke_limit;
   updateNukeDisplay();
 
@@ -997,21 +1133,19 @@ function restartGame() {
   keys.space.pressed = false;
   keys.b.pressed = false;
   keys.m.pressed = false;
+  keys.v.pressed = false;
 
   // Reset frame counter if needed
   frames = 0;
   score = 0;
   scoreEl.textContent = score;
 
-  // Set waiting flag and spawn grid after delay
+  // Alien spawn after delay
   waitingForFirstWave = true;
-  //  setTimeout(() => {
-  //      grids.push(new Grid(aliens[Math.floor(Math.random() * aliens.length)]));
-  //      waitingForFirstWave = false;
-  //  }, 2000); // 2 seconds delay
-  //  if (!isGameAnimating) {
-  //   cancelAnimationFrame(animate)
-  // }
+setTimeout(() => {
+  spawnAlienWave();
+}, 2000); // Delay first wave by 2 seconds
+
   animate();
 }
 
@@ -1083,7 +1217,7 @@ function updateNukeDisplay() {
   if (nukesRemaining > 0) {
     for (let i = 0; i < nukesRemaining; i++) {
       const img = document.createElement("img");
-      img.src = "./images/Nuclear_Weapon.png"; // same PNG you use in the Nuke class
+      img.src = "./images/Nuclear_Weapon.png";
       img.classList.add("nuke-icon");
       nukeContainer.appendChild(img);
     }
@@ -1130,14 +1264,6 @@ function animate() {
     }
   });
 
-  /*-------------------------------- Functions Animate | Update Muzzle Smoke  --------------------------------*/
-  // update & draw smoke puffs (BEFORE player)
-  muzzleSmokePuffs.forEach((smoke, index) => {
-    smoke.update();
-    if (smoke.alpha <= 0) {
-      muzzleSmokePuffs.splice(index, 1);
-    }
-  });
   /*-------------------------------- Functions Animate | Update Player  --------------------------------*/
   // Update player, movement and control
   player.update();
@@ -1182,6 +1308,15 @@ function animate() {
     }
   });
 
+  /*-------------------------------- Functions Animate | Update Muzzle Smoke  --------------------------------*/
+  // update & draw smoke puffs (BEFORE player)
+  muzzleSmokePuffs.forEach((smoke, index) => {
+    smoke.update();
+    if (smoke.alpha <= 0) {
+      muzzleSmokePuffs.splice(index, 1);
+    }
+  });
+
   /*-------------------------------- Functions Animate | Update Muzzle Flashes --------------------------------*/
   muzzleFlashes.forEach((flash, index) => {
     if (flash.lifetime <= 0) {
@@ -1213,7 +1348,7 @@ function animate() {
       }, 0);
     } else alienBullet.update();
 
-    /*-------------------------------- Functions Animate | Player Collision --------------------------------*/
+    /*------------------------------ Functions Animate | Player Collision -------------------------------------*/
 
     // PLAYER Collision Handler | Lose Condition
     if (
@@ -1281,20 +1416,15 @@ function animate() {
 
   /*-------------------------------- Functions Animate | Alien Spawning --------------------------------*/
   // Spawning Alien Grids with delayed update
-  if (grids.length === 0 && frames % randomInterval === 0) {
-    const randomAlienType = aliens[Math.floor(Math.random() * aliens.length)];
-    if (randomAlienType) {
-      grids.push(new Grid(randomAlienType));
-      console.log("New alien wave spawned!");
-    } else {
-      console.warn("Aliens array is empty or invalid!");
-    }
+  if (!waitingForFirstWave && grids.length === 0 && frames % randomInterval === 0) {
+    spawnAlienWave();
     randomInterval = Math.floor(Math.random() * 500 + 500);
     frames = 0;
   }
 
   // Updating Grids, Aliens and Collisions
   grids.forEach((grid, gridIndex) => {
+    if (!game.over && !game.paused) {
     grid.update();
 
     if (frames % 100 === 0 && grid.aliens.length > 0) {
@@ -1302,6 +1432,7 @@ function animate() {
         alienBullets
       );
     }
+  }
 
     grid.aliens.forEach((alien, i) => {
       alien.update({ velocity: grid.velocity });
@@ -1331,7 +1462,7 @@ function animate() {
               });
 
               //  alien Explosion sound
-              alienExplosionSound.currentTime = 0; // rewind if already playing
+              alienExplosionSound.currentTime = 0; // sound start time
               alienExplosionSound.play();
 
               grid.aliens.splice(i, 1);
@@ -1452,22 +1583,6 @@ function animate() {
     }
   });
 
-  // Need to delay shooting for 2 secs until first wave is ready
-  // Only allow shooting if NOT waiting for first wave
-  if (!waitingForFirstWave) {
-    //   grids.forEach((grid, gridIndex) => {
-    //       grid.update();
-    // if (frames % 100 === 0 && grid.aliens.length > 0) {
-    //   grid.aliens[Math.floor(Math.random() * grid.aliens.length)].shoot(
-    //     alienBullets
-    //   );
-    // }a
-    //       grid.aliens.forEach((alien, i) => {
-    //           alien.update({ velocity: grid.velocity });
-    //       });
-    //   });
-  }
-
   frames++;
 }
 
@@ -1501,13 +1616,17 @@ function initBackgroundMusicOnce() {
   window.addEventListener("touchstart", playMusic);
 }
 
+//----------------------------- Event Listeners | DOM Content Loading -----------
+
 window.addEventListener("DOMContentLoaded", () => {
   initBackgroundMusicOnce();
   resizeCanvas();
+  initStars();
   updateNukeDisplay(); // Update nuke display on load
   loadHighScore();
   window.addEventListener("resize", resizeCanvas);
   window.addEventListener("orientationchange", resizeCanvas);
+  initStars();
 });
 
 //----------------------------- Event Listeners | Buttons ----------------------
@@ -1517,7 +1636,7 @@ restartBtn.addEventListener("click", restartGame);
 
 //----------------------------- Event Listeners | Key Presses ------------------
 addEventListener("keydown", (event) => {
-  console.log("Key pressed:", event.key); // Optional debug
+  console.log("Key pressed:", event.key);
   handleKey(event.key);
 });
 
@@ -1549,6 +1668,53 @@ document.getElementById("fireBtn").addEventListener("touchstart", () => {
 });
 
 // add missing buttons ## CHECK
+
+//touch event listeners for mobile controls
+
+leftBtn.addEventListener("touchstart", () => handleHoldStart("a", leftBtn));
+leftBtn.addEventListener("mousedown", () => handleHoldStart("a", leftBtn));
+
+leftBtn.addEventListener("touchend", () => handleHoldEnd("a", leftBtn));
+leftBtn.addEventListener("mouseup", () => handleHoldEnd("a", leftBtn));
+leftBtn.addEventListener("mouseleave", () => handleHoldEnd("a", leftBtn));
+
+rightBtn.addEventListener("touchstart", () => handleHoldStart("d", rightBtn));
+rightBtn.addEventListener("mousedown", () => handleHoldStart("d", rightBtn));
+
+rightBtn.addEventListener("touchend", () => handleHoldEnd("d", rightBtn));
+rightBtn.addEventListener("mouseup", () => handleHoldEnd("d", rightBtn));
+rightBtn.addEventListener("mouseleave", () => handleHoldEnd("d", rightBtn));
+
+leftBtn.addEventListener("click", () => {
+  handleKey("a");
+  // briefly simulate key release after a short delay
+  setTimeout(() => handleKeyRelease("a"), 100);
+});
+
+rightBtn.addEventListener("click", () => {
+  handleKey("d");
+  setTimeout(() => handleKeyRelease("d"), 100);
+});
+
+
+fireBtn.addEventListener("touchstart", handleMobileFire);
+missileBtn.addEventListener("touchstart", handleMobileMissile);
+nukeBtn.addEventListener("touchstart", handleMobileNuke);
+
+volumeUpBtn.addEventListener("click", () => {
+  increaseVolume();
+  animateButton(volumeUpBtn);
+});
+
+volumeDownBtn.addEventListener("click", () => {
+  decreaseVolume();
+  animateButton(volumeDownBtn);
+});
+
+muteBtn.addEventListener("click", () => {
+  toggleMute();
+  animateButton(muteBtn);
+});
 
 //----------------------------- Event Listeners | Load High Score  -------------
 
