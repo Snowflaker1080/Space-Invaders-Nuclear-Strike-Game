@@ -11,7 +11,6 @@ const muzzleSmokePuffs = [];
 const nuke_limit = 2;
 const nukeProjectiles = [];
 
-
 const stars = [];
 const starCount = 200;
 const keys = {
@@ -20,10 +19,10 @@ const keys = {
   d: { pressed: false },
   space: { pressed: false },
   m: { pressed: false },
+  v: { pressed: false },
 };
 
 const high_score_key = "high_score";
-
 
 /*---------------------------- Variables (state) ----------------------------*/
 let animationId;
@@ -31,7 +30,7 @@ let currentPlayerIndex = 0;
 
 let gameOverTimeout = null;
 let playerLives = 3;
-// let isGameAnimating = false; // ### CHECK for Deletion 
+// let isGameAnimating = false; // ### CHECK for Deletion
 let homeMusic = null;
 let gameMusic = null;
 let frames = 0;
@@ -68,7 +67,9 @@ missileLaunchSound.volume = 0.2; // optional volume adjustment (0.0 - 1.0)
 const nukeLaunchSound = new Audio("./audio/Nuclear_Blast_SoundFX.mp3");
 nukeLaunchSound.volume = 1.0; // optional volume adjustment (0.0 - 1.0)
 
-const playerExplosionSound = new Audio("./audio/Player_Space_Explosion_Reverb.mp3");
+const playerExplosionSound = new Audio(
+  "./audio/Player_Space_Explosion_Reverb.mp3"
+);
 playerExplosionSound.volume = 0.7; // optional volume adjustment (0.0 - 1.0)
 const playerKilledSound = new Audio("./audio/Player_Killed_Explosion.mp3");
 playerKilledSound.volume = 1.0; // optional volume adjustment (0.0 - 1.0)
@@ -77,13 +78,15 @@ alienExplosionSound.volume = 0.7; // optional volume adjustment (0.0 - 1.0)
 const missileExplosionSound = new Audio("./audio/Missile_Explosion_SFX.mp3");
 missileExplosionSound.volume = 0.7; // optional volume adjustment (0.0 - 1.0)
 
-const backgroundMusic = new Audio("./audio/Background_Spaceship_Texture_SFX.mp3");
-backgroundMusic.loop = true;       // Loop forever
-backgroundMusic.volume = 0.4;      // Adjust volume (0.0 - 1.0)
-backgroundMusic.preload = "auto";  // Preload for smoother start
+const backgroundMusic = new Audio(
+  "./audio/Background_Spaceship_Texture_SFX.mp3"
+);
+backgroundMusic.loop = true; // Loop forever
+backgroundMusic.volume = 0.4; // Adjust volume (0.0 - 1.0)
+backgroundMusic.preload = "auto"; // Preload for smoother start
 
 // Only present on home.html:
-const startBtn = document.getElementById('startBtn');
+const startBtn = document.getElementById("startBtn");
 
 /*--------------------------------- Classes ---------------------------------*/
 /*--------------------------- Player Class ------------------------------*/
@@ -668,27 +671,27 @@ function handleKey(key) {
     case "b":
       console.log("Pressed B key - fire nuke!");
       keys.b.pressed = true;
-      
+
       if (nukesRemaining > 0) {
         nukesRemaining--;
         updateNukeDisplay();
 
-      // Play nuke launch sound
-      nukeLaunchSound.currentTime = 0.0 // sound start time
-      nukeLaunchSound.play();
+        // Play nuke launch sound
+        nukeLaunchSound.currentTime = 0.0; // sound start time
+        nukeLaunchSound.play();
 
-      const nuke = new Nuke({
-        position: {
-          x: player.position.x + player.width / 2,
-          y: player.position.y,
-        },
-        velocity: {
-          x: (canvas.width / 2 - (player.position.x + player.width / 2)) / 60,
-          y: (canvas.height / 2 - player.position.y) / 60,
-        },
-      });
-      nukeProjectiles.push(nuke);
-    }
+        const nuke = new Nuke({
+          position: {
+            x: player.position.x + player.width / 2,
+            y: player.position.y,
+          },
+          velocity: {
+            x: (canvas.width / 2 - (player.position.x + player.width / 2)) / 60,
+            y: (canvas.height / 2 - player.position.y) / 60,
+          },
+        });
+        nukeProjectiles.push(nuke);
+      }
       break;
 
     case "d":
@@ -765,6 +768,13 @@ function handleKey(key) {
         );
       }
       break;
+    case "v":
+      keys.v.pressed = true;
+      // new: switch aircraft on 'v'
+  if (key === 'v') {
+    player.switchPlayer();  
+  }
+
   }
 }
 
@@ -775,49 +785,49 @@ function handleKeyRelease(key) {
   if (lowerKey === "d") keys.d.pressed = false;
   if (lowerKey === "b") keys.b.pressed = false;
   if (lowerKey === "m") keys.m.pressed = false;
+  if (lowerKey === "v") keys.v.pressed = false;
   if (lowerKey === " " || lowerKey === "spacebar" || lowerKey === "space")
     keys.space.pressed = false;
 }
 
 // Set Nuke out function .....
 
-  /*--------------------------- Canvas Resized ---------------------------*/
-  function resizeCanvas() {
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-    stars.length = 0;
-    /*--------------------------- Stars ---------------------------*/
-  
-    // Reposition stars inside new canvas size
-    stars.forEach((star) => {
-      star.x = Math.random() * canvas.width;
-      star.y = Math.random() * canvas.height;
+/*--------------------------- Canvas Resized ---------------------------*/
+function resizeCanvas() {
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+  stars.length = 0;
+  /*--------------------------- Stars ---------------------------*/
+
+  // Reposition stars inside new canvas size
+  stars.forEach((star) => {
+    star.x = Math.random() * canvas.width;
+    star.y = Math.random() * canvas.height;
+  });
+
+  // star background
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 0.5,
+      velocity: {
+        x: 0,
+        y: 0.5, // star downwards movement
+      },
+      alpha: Math.random(),
+      alphaChange: Math.random() * 0.02 + 0.005, // speed of twinkle
     });
-  
-    // star background
-    for (let i = 0; i < starCount; i++) {
-      stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 0.5,
-        velocity: {
-          x: 0,
-          y: 0.5, // star downwards movement
-        },
-        alpha: Math.random(),
-        alphaChange: Math.random() * 0.02 + 0.005, // speed of twinkle
-      });
-    }
-  
-    // Keep player at bottom and centered when window resizes
-    if (player.image) {
-      player.position.x = canvas.width / 2 - player.width / 2;
-      player.position.y = canvas.height - player.height - 30; // 30px bottom margin
-    }
   }
 
-/*------------------------- Audio --------------------------------------*/
+  // Keep player at bottom and centered when window resizes
+  if (player.image) {
+    player.position.x = canvas.width / 2 - player.width / 2;
+    player.position.y = canvas.height - player.height - 30; // 30px bottom margin
+  }
+}
 
+/*------------------------- Audio --------------------------------------*/
 
 function setupAudio() {
   if (isHomeScreen) {
@@ -825,7 +835,9 @@ function setupAudio() {
     homeMusic.loop = true;
     homeMusic.volume = 0.5;
     // Some browsers block autoplay, so we catch any errors:
-    homeMusic.play().catch(err => console.warn('Home-music autoplay blocked:', err));
+    homeMusic
+      .play()
+      .catch((err) => console.warn("Home-music autoplay blocked:", err));
   }
   if (isGameScreen) {
     gameMusic = new Audio(GAME_MUSIC_SRC);
@@ -841,9 +853,11 @@ function startGame() {
   // …and when you enter gameplay…
   if (gameMusic) {
     gameMusic.currentTime = 0;
-    gameMusic.play().catch(err => console.warn('Game-music autoplay blocked:', err));
+    gameMusic
+      .play()
+      .catch((err) => console.warn("Game-music autoplay blocked:", err));
   }
-  
+
   // …plus whatever your existing “begin game” logic is:
   initGameLoop();
 }
@@ -851,7 +865,7 @@ function startGame() {
 /*-------------------------------- Functions | High Score Display --------------------------------*/
 
 function fmt(n) {
-  return n.toLocaleString();     // or: new Intl.NumberFormat('en-GB').format(n);
+  return n.toLocaleString(); // or: new Intl.NumberFormat('en-GB').format(n);
 }
 
 function loadHighScore() {
@@ -871,32 +885,32 @@ function updateScore(newPoints) {
   // check against highScore
   if (score > highScore) {
     highScore = score;
-    highScoreEl.textContent = fmt(highScore);   
+    highScoreEl.textContent = fmt(highScore);
     saveHighScore();
   }
 }
 
-  /*--------------------------- Start Background Music ---------------------------*/
-  function enableBackgroundMusicOnce() {
-    const tryPlay = () => {
-      if (backgroundMusic.paused) {
-        backgroundMusic.currentTime = 0;
-        backgroundMusic.play().catch(err => {
-          console.warn('Autoplay blocked:', err);
-        });
-      }
-  
-      // Only need to listen once
-      window.removeEventListener('keydown', tryPlay);
-      window.removeEventListener('mousedown', tryPlay);
-      window.removeEventListener('touchstart', tryPlay);
-    };
-  
-    // Start music on first user interaction
-    window.addEventListener('keydown', tryPlay);
-    window.addEventListener('mousedown', tryPlay);
-    window.addEventListener('touchstart', tryPlay);
-  }
+/*--------------------------- Start Background Music ---------------------------*/
+function enableBackgroundMusicOnce() {
+  const tryPlay = () => {
+    if (backgroundMusic.paused) {
+      backgroundMusic.currentTime = 0;
+      backgroundMusic.play().catch((err) => {
+        console.warn("Autoplay blocked:", err);
+      });
+    }
+
+    // Only need to listen once
+    window.removeEventListener("keydown", tryPlay);
+    window.removeEventListener("mousedown", tryPlay);
+    window.removeEventListener("touchstart", tryPlay);
+  };
+
+  // Start music on first user interaction
+  window.addEventListener("keydown", tryPlay);
+  window.addEventListener("mousedown", tryPlay);
+  window.addEventListener("touchstart", tryPlay);
+}
 
 /*--------------------------- Bullet Firing Angle relative to player direction ---------------------------*/
 function getRotatedPoint(px, py, cx, cy, angle) {
@@ -943,7 +957,6 @@ function restartGame() {
   // Start or resume background music
   backgroundMusic.currentTime = 0;
   backgroundMusic.play();
-  
 
   game.active = true;
   game.over = false;
@@ -1001,8 +1014,6 @@ function restartGame() {
   // }
   animate();
 }
-
-
 
 /*--------------------------- Explosions function  ---------------------------*/
 // Explosion
@@ -1067,24 +1078,22 @@ function updateLivesDisplay() {
 /*-------------------------------- Functions | Update Nukes Display --------------------------------*/
 
 function updateNukeDisplay() {
-  nukeContainer.innerHTML = '';                // clear out old icons/text
+  nukeContainer.innerHTML = ""; // clear out old icons/text
 
   if (nukesRemaining > 0) {
     for (let i = 0; i < nukesRemaining; i++) {
-      const img = document.createElement('img');
-      img.src   = './images/Nuclear_Weapon.png'; // same PNG you use in the Nuke class
-      img.classList.add('nuke-icon');
+      const img = document.createElement("img");
+      img.src = "./images/Nuclear_Weapon.png"; // same PNG you use in the Nuke class
+      img.classList.add("nuke-icon");
       nukeContainer.appendChild(img);
     }
   } else {
-    const msg = document.createElement('span');
-    msg.textContent = 'Out of nuclear weapons';
-    msg.classList.add('no-nukes');
+    const msg = document.createElement("span");
+    msg.textContent = "Out of nuclear weapons";
+    msg.classList.add("no-nukes");
     nukeContainer.appendChild(msg);
   }
 }
-
-
 
 /*--------------------------------------------------------------------------------------------------------*/
 /*-------------------------------- Functions Animate -----------------------------------------------------*/
@@ -1204,7 +1213,7 @@ function animate() {
       }, 0);
     } else alienBullet.update();
 
-/*-------------------------------- Functions Animate | Player Collision --------------------------------*/
+    /*-------------------------------- Functions Animate | Player Collision --------------------------------*/
 
     // PLAYER Collision Handler | Lose Condition
     if (
@@ -1252,7 +1261,7 @@ function animate() {
         }
       }, 0);
 
-/*-------------------------------- Functions Animate | GAME OVER Logic --------------------------------*/
+      /*-------------------------------- Functions Animate | GAME OVER Logic --------------------------------*/
       // GAME OVER Render Logic
       if (playerLives <= 0 && game.over && !game.over && !gameOverTimeout) {
         gameOverTimeout = setTimeout(() => {
@@ -1358,7 +1367,7 @@ function animate() {
             const missileFound = missiles.find((mis) => mis === missile);
 
             if (alienFound && missileFound) {
-              + updateScore(200); // missing hit points
+              +updateScore(200); // missing hit points
 
               createExplosions({
                 object: alien,
@@ -1471,14 +1480,14 @@ function animate() {
 
 // Wire your “Start” button to both stop home music and launch the game
 if (startBtn) {
-  startBtn.addEventListener('click', startGame);
+  startBtn.addEventListener("click", startGame);
 }
 
 function initBackgroundMusicOnce() {
   const playMusic = () => {
     if (backgroundMusic.paused) {
       backgroundMusic.currentTime = 0;
-      backgroundMusic.play().catch(err => {
+      backgroundMusic.play().catch((err) => {
         console.warn("Autoplay blocked:", err);
       });
     }
@@ -1517,11 +1526,11 @@ addEventListener("keyup", (event) => {
 
 //----------------------------- Event Listeners | Load High Score  -------------
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener("DOMContentLoaded", () => {
   loadHighScore();
 });
 
 /*------------------------------- Initial Call --------------------------------*/
 //--------------------Game Loop -------------------------------------------
 // window.focus();
-animate()
+animate();
