@@ -1,10 +1,11 @@
 /* --- Shared Styles --- */
 
-html, body {
+html, body, button {
     margin: 0;
     padding: 0;
     overflow: hidden; /* prevents scroll on mobile */
     height: 100%;
+    touch-action: manipulation; /* prevents zooming in on mobile double touch */
   }
 
 canvas {
