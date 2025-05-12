@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<canvas id="spaceCanvas"></canvas>
+
 
 <head>
     <meta charset="UTF-8">
@@ -14,6 +14,7 @@
 </head>
 
 <body>
+    <canvas id="spaceCanvas"></canvas>
     <div class="home-screen">
         <h1>Space Invaders</h1>
 <!-- Intro Video or GIF -->
@@ -61,7 +62,7 @@
  
     <script>
         document.getElementById('startGameBtn').addEventListener('click', () => {
-            window.open('game.html', '_blank');
+            window.location.href ='game.html';
         });
         document.getElementById('instructionsBtn').addEventListener('click', () => {
             const panel = document.getElementById('instructionsPanel');

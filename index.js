@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         draw() {
+        
             const x = (this.x - canvas.width / 2) * (canvas.width / this.z) + canvas.width / 2;
             const y = (this.y - canvas.height / 2) * (canvas.width / this.z) + canvas.height / 2;
             const radius = this.radius * (canvas.width / this.z);
