@@ -290,6 +290,7 @@ body {
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    touch-action: manipulation;
     z-index: 10;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
@@ -324,6 +325,7 @@ body {
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    touch-action: manipulation;
     z-index: 10;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
@@ -340,7 +342,7 @@ body {
     text-align: center;
     color: white;
     opacity: 0;
-    pointer-events: none; /* let clicks pass through to buttons if needed */
+    pointer-events: none; 
     z-index: 20;
 }
 
@@ -457,6 +459,7 @@ body {
     border: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     cursor: pointer;
+    touch-action: manipulation;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -488,6 +491,7 @@ body {
     width: 60px;
     height: 60px;
     cursor: pointer;
+    touch-action: manipulation;
     z-index: 10;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
@@ -515,6 +519,7 @@ body {
     border: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     cursor: pointer;
+    touch-action: manipulation;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -545,6 +550,7 @@ body {
     border: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     cursor: pointer;
+    touch-action: manipulation;
     transition: transform 0.1s ease, background-color 0.2s;
   }
 
@@ -570,10 +576,4 @@ body {
 .volume-clicked {
     transform: scale(0.9);
     background-color: #444;
-  }
-  
-#volumeSlider {
-    width: 120px;
-    accent-color: lightblue;
-    cursor: pointer;
   }
