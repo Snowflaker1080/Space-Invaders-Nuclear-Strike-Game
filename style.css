@@ -14,17 +14,6 @@ html, body {
     }
 }
 
-#workText {
-    color: red;
-    background-color: white;
-    padding: 10px 20px;
-    border-radius: 2px;
-    display: inline-block;
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    margin-bottom: 20px; /* optional: space below the box */
-}
-
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -44,7 +33,7 @@ body {
 
 .media-box {
     max-width: 80%;
-    max-height: 60vh;
+    max-height: 80vh;
     margin: 20px auto;
     display: flex;
     justify-content: center;
@@ -95,12 +84,27 @@ body {
     color: white;
     padding: 20px;
     border-radius: 12px;
-    max-width: 600px;
+    max-width: 800px;
     width: 80%;
     text-align: left;
     z-index: 2000;
     display: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    opacity: 0.88;   
+}
+
+#instructionsPanel h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+#instructionsPanel p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    text-indent: 5%;
 }
 
 #instructionsPanel img {
@@ -112,6 +116,17 @@ body {
 #instructionsPanel.show {
     display: block;
 }
+
+.instructions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;            /* space between columns */
+    margin-bottom: 1.5rem;  /* space before image/button */
+  }
+  
+  .instructions-grid .section h3 {
+    margin-top: 0;          /* tighten up the heading */
+  }
 
 .controls-section {
     display: flex;
@@ -135,6 +150,7 @@ body {
     color: white;
     cursor: pointer;
     transition: background 0.3s;
+    float: right;
 }
 
 #closeInstructionsBtn:hover {
@@ -174,7 +190,21 @@ body {
     top: 10px;
     left: 20px;
     padding: 8px 12px;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.1);
+    color: white;
+    border-radius: 4px;
+    font-family: sans-serif;
+    font-size: 24px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    z-index: 999; /* Always on top */
+}
+
+#highScoreContainer {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.1);
     color: white;
     border-radius: 4px;
     font-family: sans-serif;
@@ -229,21 +259,6 @@ body {
     z-index: 1000;
 }
 
-#returnHomeBtn {
-    padding: 10px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-#returnHomeBtn:hover {
-    background-color: #0056b3;
-}
-
 #restartGameBtn {
     position: fixed;
     bottom: 10px;
@@ -281,7 +296,7 @@ body {
 #switchPlayerBtn {
     position: fixed;
     bottom: 10px;    /* distance from bottom edge */
-    right: 20px;     /* distance from right edge */
+    right: 150px;     /* distance from right edge */
     padding: 10px 20px;
     font-size: 16px;
     font-family: sans-serif;
@@ -296,6 +311,26 @@ body {
 
 #switchPlayerBtn:hover {
     background-color: #218838;
+}
+
+#returnHomeBtn {
+    position: fixed;
+    bottom: 10px;    /* distance from bottom edge */
+    right: 20px;     /* distance from right edge */
+    padding: 10px 20px;
+    font-size: 16px;
+    font-family: sans-serif;
+    background-color: rgb(15, 19, 73) ;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+#returnHomeBtn:hover {
+    background-color: #0056b3;
 }
 
 #gameOverContainer {
@@ -342,18 +377,63 @@ body {
     z-index: 10;
 }
 
-/* Small life icons */
-.life-icon {
-    width: 30px;
-    height: auto;
-    opacity: 1;
-    transition: opacity 0.3s ease;
-    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5)); /* subtle shadow */
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.1); /* slight background for visibility */
+#livesContainer::before {
+    content: "Lives:";
+    margin-right: 0.5rem;
+    color: white;
+    font-size: 1rem;
+    /* optional: match UI’s font */
+    font-family: sans-serif;
 }
 
 /* Dimmed or lost life */
 .life-icon.lost {
-    opacity: 0.2;
+    display: none;
 }
+
+/* make them match your life-icons but on the right side */
+.icon-panel {
+    display: flex;
+    justify-content: space-between;  /* lives on the left, nukes on the right */
+    align-items: center;
+  }
+  
+  /* nukes */
+  #nukeContainer {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    position: fixed;
+    bottom: 10px;
+    right: 400px; /* adjust as needed, depends on restart button width + padding */
+    z-index: 10;
+  }
+
+  #nukeContainer::before {
+    content: "Nukes:";
+    margin-right: 0.5rem;
+    color: white;
+    font-size: 1rem;
+    /* optional: match your UI’s font */
+    font-family: sans-serif;
+  }
+
+  /* Small life icons */
+.life-icon {
+    width: 30px;
+    height: auto;
+    transition: opacity 0.3s ease;
+}
+
+  .nuke-icon {
+    width: 15px;
+    height: auto;
+    filter: drop-shadow(0 0 15px white)
+  }
+
+  /* “out of…” text styling */
+  .no-nukes {
+    color: #f55;
+    font-weight: bold;
+    font-size: 0.9rem;
+  }

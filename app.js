@@ -1,15 +1,16 @@
 import { players, aliens, weapons } from "./data.js";
 
 /*-------------------------------- Constants --------------------------------*/
-
+const alienBullets = [];
 const bullets = [];
 const explosions = [];
 const grids = [];
-const alienBullets = [];
 const missiles = [];
-const nukeProjectiles = [];
 const muzzleFlashes = [];
 const muzzleSmokePuffs = [];
+const nuke_limit = 2;
+const nukeProjectiles = [];
+
 
 const stars = [];
 const starCount = 200;
@@ -21,25 +22,68 @@ const keys = {
   m: { pressed: false },
 };
 
-/*---------------------------- Variables (state) ----------------------------*/
+const high_score_key = "high_score";
 
+
+/*---------------------------- Variables (state) ----------------------------*/
+let animationId;
 let currentPlayerIndex = 0;
-let waitingForFirstWave = true;
+
 let gameOverTimeout = null;
 let playerLives = 3;
-let isGameAnimating = false;
+// let isGameAnimating = false; // ### CHECK for Deletion 
+let homeMusic = null;
+let gameMusic = null;
+let frames = 0;
+let nukesRemaining = nuke_limit;
+let randomInterval = Math.floor(Math.random() * 500 + 500);
+let game = {
+  over: false,
+  active: true,
+  showGameOverText: false,
+  paused: false,
+};
+let score = 0;
+let highScore = 0;
+let waitingForFirstWave = true;
 
 /*------------------------ Cached Element References ------------------------*/
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-const lifeIcons = document.querySelectorAll('.life-icon');
+const lifeIcons = document.querySelectorAll(".life-icon");
+const nukeContainer = document.getElementById("nukeContainer");
 const scoreEl = document.getElementById("scoreEl");
+const highScoreEl = document.getElementById("highScoreEl");
 const switchBtn = document.getElementById("switchPlayerBtn");
 const restartBtn = document.getElementById("restartGameBtn");
 const playerNameEl = document.getElementById("playerName");
 const gameTitleEl = document.getElementById("gameTitle");
 const gameOverContainer = document.getElementById("gameOverContainer");
+
+const bulletLaunchSound = new Audio("./audio/Laser_Gun_SoundFX.mp3");
+bulletLaunchSound.volume = 0.2; // optional volume adjustment (0.0 - 1.0)
+const missileLaunchSound = new Audio("./audio/Missile_Launch_SoundFX.mp3");
+missileLaunchSound.volume = 0.2; // optional volume adjustment (0.0 - 1.0)
+const nukeLaunchSound = new Audio("./audio/Nuclear_Blast_SoundFX.mp3");
+nukeLaunchSound.volume = 1.0; // optional volume adjustment (0.0 - 1.0)
+
+const playerExplosionSound = new Audio("./audio/Player_Space_Explosion_Reverb.mp3");
+playerExplosionSound.volume = 0.7; // optional volume adjustment (0.0 - 1.0)
+const playerKilledSound = new Audio("./audio/Player_Killed_Explosion.mp3");
+playerKilledSound.volume = 1.0; // optional volume adjustment (0.0 - 1.0)
+const alienExplosionSound = new Audio("./audio/Alien_Explosion_SFX.mp3");
+alienExplosionSound.volume = 0.7; // optional volume adjustment (0.0 - 1.0)
+const missileExplosionSound = new Audio("./audio/Missile_Explosion_SFX.mp3");
+missileExplosionSound.volume = 0.7; // optional volume adjustment (0.0 - 1.0)
+
+const backgroundMusic = new Audio("./audio/Background_Spaceship_Texture_SFX.mp3");
+backgroundMusic.loop = true;       // Loop forever
+backgroundMusic.volume = 0.4;      // Adjust volume (0.0 - 1.0)
+backgroundMusic.preload = "auto";  // Preload for smoother start
+
+// Only present on home.html:
+const startBtn = document.getElementById('startBtn');
 
 /*--------------------------------- Classes ---------------------------------*/
 /*--------------------------- Player Class ------------------------------*/
@@ -153,10 +197,10 @@ class Alien {
         position: {
           x: this.position.x + this.width / 2,
           y: this.position.y + this.height,
-          },
-        velocity: { x: 0, y: 5 }
+        },
+        velocity: { x: 0, y: 5 },
       })
-    )
+    );
   }
 }
 
@@ -166,20 +210,19 @@ class Grid {
     this.position = { x: 0, y: 0 };
     this.velocity = { x: 3, y: 0 };
     this.aliens = [];
-    
+
     const columns = Math.floor(Math.random() * 10 + 5);
     const rows = Math.floor(Math.random() * 5 + 2);
 
     for (let x = 0; x < columns; x++) {
       for (let y = 0; y < rows; y++) {
-
         this.aliens.push(
           new Alien({
             position: { x: x * 80, y: y * 80 },
-            image: alienType.image
+            image: alienType.image,
           })
         );
-      } 
+      }
     }
     // Dynamically calculate width
     this.width = columns * 80;
@@ -265,7 +308,7 @@ class Bullet {
   draw() {
     ctx.beginPath();
     ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = "red";
+    ctx.fillStyle = "orange";
     ctx.fill();
     ctx.closePath();
   }
@@ -342,7 +385,7 @@ class Missile {
       // Burst left or right + climb fast
       this.velocity.x = this.pattern === 1 ? -15 : 15;
       this.velocity.y = -0.01;
-    } else if (elapsed < 0.30) {
+    } else if (elapsed < 0.3) {
       // Straighten path, climb steadily
       this.velocity.x = this.pattern === 1 ? 0 : -0;
       this.velocity.y = -2;
@@ -384,8 +427,8 @@ class Nuke {
       y: (centerY - this.position.y) / durationFrames,
     };
 
-    this.radius = 3; // start large
-    this.minRadius = 1; // target shrink
+    this.radius = 2.2; // nuke start size
+    this.minRadius = 0.5; // target shrink size
     this.shrinkSpeed = 0.05; // shrink smoothly
 
     this.collapsed = false;
@@ -399,7 +442,6 @@ class Nuke {
     this.shockwaveMaxRadius = Math.max(canvas.width, canvas.height) * 1.5;
     this.shockwaveAlpha = 1;
     this.flashFrames = 0;
-
   }
 
   update() {
@@ -437,10 +479,10 @@ class Nuke {
     ctx.translate(this.position.x, this.position.y);
     const scale = this.radius / 30;
     ctx.scale(scale, scale);
-     // Shadow glow applied around nuke
-    ctx.shadowColor = 'white';
+    // Shadow glow applied around nuke
+    ctx.shadowColor = "white";
     ctx.shadowBlur = 15; // increase for stronger glow
-    
+
     ctx.drawImage(this.image, -this.image.width / 2, -this.image.height / 2);
     ctx.restore();
   }
@@ -452,85 +494,95 @@ class Nuke {
     this.flashFrames = 60;
     this.isFlashing = true;
 
-      // Clear all game entities
-      grids.length = 0;
-      alienBullets.length = 0;
-      bullets.length = 0;
-      missiles.length = 0;
-      explosions.length = 0;
-      muzzleFlashes.length = 0;
+    // Clear all game entities
+    grids.length = 0;
+    alienBullets.length = 0;
+    bullets.length = 0;
+    missiles.length = 0;
+    explosions.length = 0;
+    muzzleFlashes.length = 0;
 
     const flashInterval = setInterval(() => {
-        if (flashes % 2 === 0) {
-            ctx.fillStyle = "white";
-        } else {
-            ctx.fillStyle = "black";
-        }
+      if (flashes % 2 === 0) {
+        ctx.fillStyle = "white";
+      } else {
+        ctx.fillStyle = "black";
+      }
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      flashes++;
+      if (flashes >= maxFlashes) {
+        clearInterval(flashInterval);
+
+        // Final FLASH-OUT blast
+        ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        flashes++;
-        if (flashes >= maxFlashes) {
-            clearInterval(flashInterval);
-
-            // Final FLASH-OUT blast
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            if (this.explosionSound) { // ADD Sound FX 
-                this.explosionSound.play();
-            }
-
-            // Start shockwave animation
-            this.startShockwave();
-
-              // Clear all game entities
-              grids.length = 0;
-              alienBullets.length = 0;
-              bullets.length = 0;
-              missiles.length = 0;
-              nukeProjectiles.length = 0;
-              explosions.length = 0;
-              muzzleFlashes.length = 0;
+        if (this.explosionSound) {
+          // ADD Sound FX
+          this.explosionSound.play();
         }
-    }, flashDuration);
-}
 
-startShockwave() {
+        // Start shockwave animation
+        this.startShockwave();
+
+        // Clear all game entities
+        grids.length = 0;
+        alienBullets.length = 0;
+        bullets.length = 0;
+        missiles.length = 0;
+        nukeProjectiles.length = 0;
+        explosions.length = 0;
+        muzzleFlashes.length = 0;
+      }
+    }, flashDuration);
+  }
+
+  startShockwave() {
     this.shockwaveActive = true;
     this.shockwaveRadius = 10;
     this.shockwaveMaxRadius = Math.max(canvas.width, canvas.height);
     this.shockwaveAlpha = 1;
 
     const animateShockwave = () => {
-        if (!this.shockwaveActive) return;
+      if (!this.shockwaveActive) return;
 
-        // Clear background
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Clear background
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw expanding ring
-        ctx.save();
-        ctx.strokeStyle = `rgba(255, 255, 255, ${this.shockwaveAlpha})`;
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.arc(canvas.width / 2, canvas.height / 2, this.shockwaveRadius, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
+      // Draw expanding ring
+      ctx.save();
+      ctx.strokeStyle = `rgba(255, 255, 255, ${this.shockwaveAlpha})`;
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(
+        canvas.width / 2,
+        canvas.height / 2,
+        this.shockwaveRadius,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+      ctx.restore();
 
-        // Update ring properties
-        this.shockwaveRadius += 20; // expand speed
-        this.shockwaveAlpha -= 0.03; // fade speed
+      // Update ring properties
+      this.shockwaveRadius += 20; // expand speed
+      this.shockwaveAlpha -= 0.03; // fade speed
 
-        if (this.shockwaveRadius >= this.shockwaveMaxRadius || this.shockwaveAlpha <= 0) {
-            this.shockwaveActive = false;
-            this.isFlashing = false; // resume game after shockwave
-        } else {
-            requestAnimationFrame(animateShockwave);
-        }
+      if (
+        this.shockwaveRadius >= this.shockwaveMaxRadius ||
+        this.shockwaveAlpha <= 0
+      ) {
+        this.shockwaveActive = false;
+        this.isFlashing = false; // resume game after shockwave
+      } else {
+        requestAnimationFrame(animateShockwave);
+      }
     };
 
     animateShockwave();
-}
+  }
 }
 /*--------------------------- Explosion Class ---------------------------*/
 class Explosion {
@@ -597,7 +649,9 @@ const player = new Player();
 updateLivesDisplay();
 grids.push(new Grid(aliens[Math.floor(Math.random() * aliens.length)]));
 
-/*-------------------------------- Functions --------------------------------*/
+/*---------------------------------------------------------------------------------------*/
+/*---------------------------------------- Functions ------------------------------------*/
+/*---------------------------------------------------------------------------------------*/
 
 /*--------------------------- Functions | Key Handler -------------------*/
 
@@ -612,8 +666,17 @@ function handleKey(key) {
       break;
 
     case "b":
-      console.log("Pressed B key - fire nuke!")
+      console.log("Pressed B key - fire nuke!");
       keys.b.pressed = true;
+      
+      if (nukesRemaining > 0) {
+        nukesRemaining--;
+        updateNukeDisplay();
+
+      // Play nuke launch sound
+      nukeLaunchSound.currentTime = 0.0 // sound start time
+      nukeLaunchSound.play();
+
       const nuke = new Nuke({
         position: {
           x: player.position.x + player.width / 2,
@@ -625,6 +688,7 @@ function handleKey(key) {
         },
       });
       nukeProjectiles.push(nuke);
+    }
       break;
 
     case "d":
@@ -632,7 +696,10 @@ function handleKey(key) {
       break;
 
     case "m":
-      keys.m.pressed = true;
+      // Play missile launch sound
+      missileLaunchSound.currentTime = 1.0; // rewind if already playing
+      missileLaunchSound.play();
+
       const nextPattern = Missile.nextPattern();
       const missileOffsetX = nextPattern === 1 ? -30 : 30;
       const missileX = player.position.x + player.width / 2 + missileOffsetX;
@@ -662,6 +729,11 @@ function handleKey(key) {
     case "spacebar":
     case "space":
       keys.space.pressed = true;
+
+      // Play bullet launch sound
+      bulletLaunchSound.currentTime = 1.0; // rewind if already playing
+      bulletLaunchSound.play();
+
       if (player.image) {
         const centerX = player.position.x + player.width / 2;
         const centerY = player.position.y + player.height / 2;
@@ -707,42 +779,126 @@ function handleKeyRelease(key) {
     keys.space.pressed = false;
 }
 
+// Set Nuke out function .....
+
   /*--------------------------- Canvas Resized ---------------------------*/
-
-function resizeCanvas() {
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-  stars.length = 0;
-  /*--------------------------- Stars ---------------------------*/
-
-  // Reposition stars inside new canvas size
-  stars.forEach((star) => {
-    star.x = Math.random() * canvas.width;
-    star.y = Math.random() * canvas.height;
-  });
-
-  // star background
-  for (let i = 0; i < starCount; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      radius: Math.random() * 2 + 0.5,
-      velocity: {
-        x: 0,
-        y: 0.5, // star downwards movement
-      },
-      alpha: Math.random(),
-      alphaChange: Math.random() * 0.02 + 0.005, // speed of twinkle
+  function resizeCanvas() {
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+    stars.length = 0;
+    /*--------------------------- Stars ---------------------------*/
+  
+    // Reposition stars inside new canvas size
+    stars.forEach((star) => {
+      star.x = Math.random() * canvas.width;
+      star.y = Math.random() * canvas.height;
     });
+  
+    // star background
+    for (let i = 0; i < starCount; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 0.5,
+        velocity: {
+          x: 0,
+          y: 0.5, // star downwards movement
+        },
+        alpha: Math.random(),
+        alphaChange: Math.random() * 0.02 + 0.005, // speed of twinkle
+      });
+    }
+  
+    // Keep player at bottom and centered when window resizes
+    if (player.image) {
+      player.position.x = canvas.width / 2 - player.width / 2;
+      player.position.y = canvas.height - player.height - 30; // 30px bottom margin
+    }
   }
 
-  // Keep player at bottom and centered when window resizes
-  if (player.image) {
-    player.position.x = canvas.width / 2 - player.width / 2;
-    player.position.y = canvas.height - player.height - 30; // 30px bottom margin
+/*------------------------- Audio --------------------------------------*/
+
+
+function setupAudio() {
+  if (isHomeScreen) {
+    homeMusic = new Audio(HOME_MUSIC_SRC);
+    homeMusic.loop = true;
+    homeMusic.volume = 0.5;
+    // Some browsers block autoplay, so we catch any errors:
+    homeMusic.play().catch(err => console.warn('Home-music autoplay blocked:', err));
+  }
+  if (isGameScreen) {
+    gameMusic = new Audio(GAME_MUSIC_SRC);
+    gameMusic.loop = true;
+    gameMusic.volume = 0.5;
+    // we don’t auto-play game music here; we’ll kick it off when the game actually starts
   }
 }
 
+function startGame() {
+  // when you leave the home screen…
+  if (homeMusic) homeMusic.pause();
+  // …and when you enter gameplay…
+  if (gameMusic) {
+    gameMusic.currentTime = 0;
+    gameMusic.play().catch(err => console.warn('Game-music autoplay blocked:', err));
+  }
+  
+  // …plus whatever your existing “begin game” logic is:
+  initGameLoop();
+}
+
+/*-------------------------------- Functions | High Score Display --------------------------------*/
+
+function fmt(n) {
+  return n.toLocaleString();     // or: new Intl.NumberFormat('en-GB').format(n);
+}
+
+function loadHighScore() {
+  const saved = localStorage.getItem(high_score_key);
+  highScore = saved !== null ? Number(saved) : 0;
+  highScoreEl.textContent = fmt(highScore);
+}
+
+function saveHighScore() {
+  localStorage.setItem(high_score_key, String(highScore));
+}
+
+function updateScore(newPoints) {
+  score += newPoints;
+  scoreEl.textContent = fmt(score);
+
+  // check against highScore
+  if (score > highScore) {
+    highScore = score;
+    highScoreEl.textContent = fmt(highScore);   
+    saveHighScore();
+  }
+}
+
+  /*--------------------------- Start Background Music ---------------------------*/
+  function enableBackgroundMusicOnce() {
+    const tryPlay = () => {
+      if (backgroundMusic.paused) {
+        backgroundMusic.currentTime = 0;
+        backgroundMusic.play().catch(err => {
+          console.warn('Autoplay blocked:', err);
+        });
+      }
+  
+      // Only need to listen once
+      window.removeEventListener('keydown', tryPlay);
+      window.removeEventListener('mousedown', tryPlay);
+      window.removeEventListener('touchstart', tryPlay);
+    };
+  
+    // Start music on first user interaction
+    window.addEventListener('keydown', tryPlay);
+    window.addEventListener('mousedown', tryPlay);
+    window.addEventListener('touchstart', tryPlay);
+  }
+
+/*--------------------------- Bullet Firing Angle relative to player direction ---------------------------*/
 function getRotatedPoint(px, py, cx, cy, angle) {
   const s = Math.sin(angle);
   const c = Math.cos(angle);
@@ -752,6 +908,8 @@ function getRotatedPoint(px, py, cx, cy, angle) {
   const ynew = px * s + py * c;
   return { x: xnew + cx, y: ynew + cy };
 }
+
+/*--------------------------- Space Invaders Title  ---------------------------*/
 
 function showGameOverTitle() {
   gameTitleEl.classList.remove("hidden");
@@ -763,10 +921,12 @@ function hideGameOverTitle() {
   gameTitleEl.classList.add("hidden");
 }
 
+/*--------------------------- Player Life Icons  ---------------------------*/
+
 function updateLifeIcons() {
   const currentImage = players[currentPlayerIndex].image;
-  lifeIcons.forEach(icon => {
-      icon.src = currentImage;
+  lifeIcons.forEach((icon) => {
+    icon.src = currentImage;
   });
 }
 
@@ -777,10 +937,18 @@ function restartGame() {
     clearTimeout(gameOverTimeout);
     gameOverTimeout = null;
   }
+  // Stopping previous animation loop
+  cancelAnimationFrame(animationId);
+
+  // Start or resume background music
+  backgroundMusic.currentTime = 0;
+  backgroundMusic.play();
+  
+
   game.active = true;
   game.over = false;
   game.showGameOverText = false;
-  game.paused = false; 
+  game.paused = false;
 
   playerLives = 3;
   updateLivesDisplay();
@@ -797,7 +965,6 @@ function restartGame() {
   player.rotation = 0;
   player.opacity = 1;
   playerNameEl.textContent = players[currentPlayerIndex].name;
- 
 
   // Clear bullets and flashes
   alienBullets.length = 0;
@@ -808,40 +975,34 @@ function restartGame() {
   nukeProjectiles.length = 0;
   alienBullets.length = 0;
   grids.length = 0;
+  nukesRemaining = nuke_limit;
+  updateNukeDisplay();
 
   // Reset keys
   keys.a.pressed = false;
   keys.d.pressed = false;
   keys.space.pressed = false;
-  keys.b.pressed = false;  
+  keys.b.pressed = false;
   keys.m.pressed = false;
-  
+
   // Reset frame counter if needed
   frames = 0;
   score = 0;
   scoreEl.textContent = score;
 
- // Set waiting flag and spawn grid after delay
- waitingForFirstWave = true;
- setTimeout(() => {
-     grids.push(new Grid(aliens[Math.floor(Math.random() * aliens.length)]));
-     waitingForFirstWave = false;
- }, 2000); // 2 seconds delay
- if (!isGameAnimating) { 
-  cancelAnimationFrame(animate) 
-}
-animate();
+  // Set waiting flag and spawn grid after delay
+  waitingForFirstWave = true;
+  //  setTimeout(() => {
+  //      grids.push(new Grid(aliens[Math.floor(Math.random() * aliens.length)]));
+  //      waitingForFirstWave = false;
+  //  }, 2000); // 2 seconds delay
+  //  if (!isGameAnimating) {
+  //   cancelAnimationFrame(animate)
+  // }
+  animate();
 }
 
-let frames = 0;
-let randomInterval = Math.floor(Math.random() * 500 + 500);
-let game = {
-  over: false,
-  active: true,
-  showGameOverText: false,
-  paused: false,
-};
-let score = 0;
+
 
 /*--------------------------- Explosions function  ---------------------------*/
 // Explosion
@@ -889,30 +1050,51 @@ function triggerGameOver() {
 }
 
 /*-------------------------------- Functions | Update Lives Display --------------------------------*/
-        function updateLivesDisplay() {
-          lifeIcons.forEach((icon, index) => {
-            //icon.src = players[currentPlayerIndex].image; // always update to current player image
-            if (index < playerLives) {
-              //icon.classList.remove('lost');
-              icon.style.opacity = 1; // visible
-              icon.src = players[currentPlayerIndex].image; // current player image
-            } else {
-              //icon.classList.add('lost');
-              icon.style.opacity = 0.2; // dimmed or hidden when lost
-            }
-          });
-        }
+function updateLivesDisplay() {
+  lifeIcons.forEach((icon, index) => {
+    //icon.src = players[currentPlayerIndex].image; // always update to current player image
+    if (index < playerLives) {
+      //icon.classList.remove('lost');
+      icon.style.opacity = 1; // visible
+      icon.src = players[currentPlayerIndex].image; // current player image
+    } else {
+      //icon.classList.add('lost');
+      icon.style.opacity = 0.2; // dimmed or hidden when lost
+    }
+  });
+}
 
-/*-------------------------------- Functions Animate -------------------------------------------------*/
+/*-------------------------------- Functions | Update Nukes Display --------------------------------*/
+
+function updateNukeDisplay() {
+  nukeContainer.innerHTML = '';                // clear out old icons/text
+
+  if (nukesRemaining > 0) {
+    for (let i = 0; i < nukesRemaining; i++) {
+      const img = document.createElement('img');
+      img.src   = './images/Nuclear_Weapon.png'; // same PNG you use in the Nuke class
+      img.classList.add('nuke-icon');
+      nukeContainer.appendChild(img);
+    }
+  } else {
+    const msg = document.createElement('span');
+    msg.textContent = 'Out of nuclear weapons';
+    msg.classList.add('no-nukes');
+    nukeContainer.appendChild(msg);
+  }
+}
+
+
+
+/*--------------------------------------------------------------------------------------------------------*/
+/*-------------------------------- Functions Animate -----------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------*/
 
 function animate() {
- 
-  // Game update and draw black background
-
-  requestAnimationFrame(animate);
+  // Store ID, game update and draw black background
+  animationId = requestAnimationFrame(animate);
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
- 
 
   // -------------------------------- Functions Animate | Update Stars ----------------------------
   // Update and draw stars
@@ -938,8 +1120,6 @@ function animate() {
       star.x = Math.random() * canvas.width;
     }
   });
-
-  
 
   /*-------------------------------- Functions Animate | Update Muzzle Smoke  --------------------------------*/
   // update & draw smoke puffs (BEFORE player)
@@ -1004,189 +1184,210 @@ function animate() {
 
   /*-------------------------------- Functions Animate | Update Explosions  --------------------------------*/
 
-    explosions.forEach((explosion, index) => { //index: its position in the array
-      if (explosion.opacity <= 0) {
-        setTimeout(() => {
-          explosions.splice(index, 1);
-        }, 0);
-      } else {
-        explosion.update();  
-      }
-    });
-    
+  explosions.forEach((explosion, index) => {
+    //index: its position in the array
+    if (explosion.opacity <= 0) {
+      setTimeout(() => {
+        explosions.splice(index, 1);
+      }, 0);
+    } else {
+      explosion.update();
+    }
+  });
+
   /*-------------------------------- Functions Animate | Update Alien Bullets  --------------------------------*/
 
-    alienBullets.forEach((alienBullet, index) => {
-      if (alienBullet.position.y + alienBullet.height >= canvas.height) {
-        setTimeout(() => {
-          alienBullets.splice(index, 1);
-        }, 0);
-      } else alienBullet.update();
+  alienBullets.forEach((alienBullet, index) => {
+    if (alienBullet.position.y + alienBullet.height >= canvas.height) {
+      setTimeout(() => {
+        alienBullets.splice(index, 1);
+      }, 0);
+    } else alienBullet.update();
 
-      /*-------------------------------- Functions Animate | Player Collision --------------------------------*/
+/*-------------------------------- Functions Animate | Player Collision --------------------------------*/
 
-      // PLAYER Collision Handler | Lose Condition
-      if (
-        alienBullet.position.y + alienBullet.height >= player.position.y &&
-        alienBullet.position.x + alienBullet.width >= player.position.x &&
-        alienBullet.position.x <= player.position.x + player.width
-      ) {
-        setTimeout(() => {
-          alienBullets.splice(index, 1);
-          player.opacity = 0.5; // semi-transparent flash on hit
+    // PLAYER Collision Handler | Lose Condition
+    if (
+      alienBullet.position.y + alienBullet.height >= player.position.y &&
+      alienBullet.position.x + alienBullet.width >= player.position.x &&
+      alienBullet.position.x <= player.position.x + player.width
+    ) {
+      setTimeout(() => {
+        alienBullets.splice(index, 1);
+        player.opacity = 0.5; // semi-transparent flash on hit
 
-          playerLives--; // reduce on life count
-          updateLivesDisplay()// update life icons
+        playerLives--; // reduce on life count
+        updateLivesDisplay(); // update life icons
 
-          createExplosions({
-            object: player,
-            color: "white",
-            fades: true,
-          });
-
-          if (playerLives <= 0) {
-            player.opacity = 0;  // hide player on last life hit
-            createExplosions({
-                object: player,
-                color: "white",
-                fades: true,
-            });
-        
-            game.over = true;
-            if (!gameOverTimeout) {
-                gameOverTimeout = setTimeout(() => triggerGameOver(), 3000);
-            }
-        } else {
-            // briefly flash, then recover
-            setTimeout(() => {
-                player.opacity = 1;
-            }, 1000);
-        }
-        }, 0);
-
-
-        /*-------------------------------- Functions Animate | GAME OVER Logic --------------------------------*/
-        // GAME OVER Render Logic
-        if (playerLives <=0 && game.over && !game.over && !gameOverTimeout) {
-          gameOverTimeout = setTimeout(() => {
-            triggerGameOver();
-            gameOverTimeout = null;
-          }, 3000);
-        }
-
-        // Player Explosion Color
         createExplosions({
           object: player,
           color: "white",
           fades: true,
         });
-      }
-    });
 
-    /*-------------------------------- Functions Animate | Alien Spawning --------------------------------*/
-// Spawning Alien Grids with delayed update
-if (grids.length === 0 && frames % randomInterval === 0) {
-  const randomAlienType = aliens[Math.floor(Math.random() * aliens.length)];
-  if (randomAlienType) {
+        // Play player Explosion sound
+        playerExplosionSound.currentTime = 0.0; // sound start time
+        playerExplosionSound.play();
+
+        if (playerLives <= 0) {
+          player.opacity = 0; // hide player on last life hit
+          createExplosions({
+            object: player,
+            color: "white",
+            fades: true,
+          });
+          // Play player Killed sound
+          playerKilledSound.currentTime = 0.0; // sound start time
+          playerKilledSound.play();
+
+          game.over = true;
+          if (!gameOverTimeout) {
+            gameOverTimeout = setTimeout(() => triggerGameOver(), 3000);
+          }
+        } else {
+          // briefly flash, then recover
+          setTimeout(() => {
+            player.opacity = 1;
+          }, 1000);
+        }
+      }, 0);
+
+/*-------------------------------- Functions Animate | GAME OVER Logic --------------------------------*/
+      // GAME OVER Render Logic
+      if (playerLives <= 0 && game.over && !game.over && !gameOverTimeout) {
+        gameOverTimeout = setTimeout(() => {
+          triggerGameOver();
+          gameOverTimeout = null;
+        }, 3000);
+      }
+
+      // Player Explosion Color
+      createExplosions({
+        object: player,
+        color: "white",
+        fades: true,
+      });
+    }
+  });
+
+  /*-------------------------------- Functions Animate | Alien Spawning --------------------------------*/
+  // Spawning Alien Grids with delayed update
+  if (grids.length === 0 && frames % randomInterval === 0) {
+    const randomAlienType = aliens[Math.floor(Math.random() * aliens.length)];
+    if (randomAlienType) {
       grids.push(new Grid(randomAlienType));
       console.log("New alien wave spawned!");
-  } else {
+    } else {
       console.warn("Aliens array is empty or invalid!");
-  }
-  randomInterval = Math.floor(Math.random() * 500 + 500);
-  frames = 0;
-}
-
-// Updating Grids, Aliens and Collisions
-grids.forEach((grid, gridIndex) => {
-  grid.update();
-
-  if (frames % 100 === 0 && grid.aliens.length > 0) {
-    grid.aliens[Math.floor(Math.random() * grid.aliens.length)].shoot(alienBullets);
+    }
+    randomInterval = Math.floor(Math.random() * 500 + 500);
+    frames = 0;
   }
 
-  grid.aliens.forEach((alien, i) => {
-    alien.update({ velocity: grid.velocity });
+  // Updating Grids, Aliens and Collisions
+  grids.forEach((grid, gridIndex) => {
+    grid.update();
 
-    bullets.forEach((projectile, j) => {
-      if (
-        projectile.position.y - projectile.radius <= alien.position.y + alien.height &&
-        projectile.position.x + projectile.radius >= alien.position.x &&
-        projectile.position.x - projectile.radius <= alien.position.x + alien.width &&
-        projectile.position.y + projectile.radius >= alien.position.y
-      ) {
-        setTimeout(() => {
-          const alienFound = grid.aliens.find((alien2) => alien2 === alien);
-          const projectileFound = bullets.find((proj2) => proj2 === projectile);
+    if (frames % 100 === 0 && grid.aliens.length > 0) {
+      grid.aliens[Math.floor(Math.random() * grid.aliens.length)].shoot(
+        alienBullets
+      );
+    }
 
-          if (alienFound && projectileFound) {
-            score += 100;
-            scoreEl.innerHTML = score;
+    grid.aliens.forEach((alien, i) => {
+      alien.update({ velocity: grid.velocity });
 
-            createExplosions({
-              object: alien,
-              color: ["grey", "white", "black"],
-              fades: true,
-            });
+      bullets.forEach((projectile, j) => {
+        if (
+          projectile.position.y - projectile.radius <=
+            alien.position.y + alien.height &&
+          projectile.position.x + projectile.radius >= alien.position.x &&
+          projectile.position.x - projectile.radius <=
+            alien.position.x + alien.width &&
+          projectile.position.y + projectile.radius >= alien.position.y
+        ) {
+          setTimeout(() => {
+            const alienFound = grid.aliens.find((alien2) => alien2 === alien);
+            const projectileFound = bullets.find(
+              (proj2) => proj2 === projectile
+            );
 
-            grid.aliens.splice(i, 1);
-            bullets.splice(j, 1);
-
-            if (grid.aliens.length > 0) {
-              const firstAlien = grid.aliens[0];
-              const lastAlien = grid.aliens[grid.aliens.length - 1];
-
-              grid.width = lastAlien.position.x - firstAlien.position.x + lastAlien.width;
-              grid.position.x = firstAlien.position.x;
-            } else {
-              grids.splice(gridIndex, 1);
-              if (grids.length === 0) waitingForFirstWave = false;
-            }
-          }
-        }, 0);
-      }
-    });
-
-missiles.forEach((missile, m) => {
-  if (
-      missile.position.y <= alien.position.y + alien.height &&
-      missile.position.x + missile.width >= alien.position.x &&
-      missile.position.x <= alien.position.x + alien.width &&
-      missile.position.y + missile.height >= alien.position.y
-  ) {
-      setTimeout(() => {
-          const alienFound = grid.aliens.find(a => a === alien);
-          const missileFound = missiles.find(mis => mis === missile);
-
-          if (alienFound && missileFound) {
-              score += 200; // maybe missiles award more points?
-              scoreEl.innerHTML = score;
+            if (alienFound && projectileFound) {
+              updateScore(100);
 
               createExplosions({
-                  object: alien,
-                  color: ["grey", "orange", "black", "white", ],
-                  fades: true,
+                object: alien,
+                color: ["grey", "white", "black"],
+                fades: true,
               });
+
+              //  alien Explosion sound
+              alienExplosionSound.currentTime = 0; // rewind if already playing
+              alienExplosionSound.play();
+
+              grid.aliens.splice(i, 1);
+              bullets.splice(j, 1);
+
+              if (grid.aliens.length > 0) {
+                const firstAlien = grid.aliens[0];
+                const lastAlien = grid.aliens[grid.aliens.length - 1];
+
+                grid.width =
+                  lastAlien.position.x -
+                  firstAlien.position.x +
+                  lastAlien.width;
+                grid.position.x = firstAlien.position.x;
+              } else {
+                grids.splice(gridIndex, 1);
+                if (grids.length === 0) waitingForFirstWave = false;
+              }
+            }
+          }, 0);
+        }
+      });
+
+      missiles.forEach((missile, m) => {
+        if (
+          missile.position.y <= alien.position.y + alien.height &&
+          missile.position.x + missile.width >= alien.position.x &&
+          missile.position.x <= alien.position.x + alien.width &&
+          missile.position.y + missile.height >= alien.position.y
+        ) {
+          setTimeout(() => {
+            const alienFound = grid.aliens.find((a) => a === alien);
+            const missileFound = missiles.find((mis) => mis === missile);
+
+            if (alienFound && missileFound) {
+              + updateScore(200); // missing hit points
+
+              createExplosions({
+                object: alien,
+                color: ["grey", "orange", "black", "white"],
+                fades: true,
+              });
+
+              missileExplosionSound.currentTime = 0; // sound start time
+              missileExplosionSound.play();
 
               grid.aliens.splice(i, 1);
               missiles.splice(m, 1);
 
               if (grid.aliens.length > 0) {
-                  const firstAlien = grid.aliens[0];
-                  const lastAlien = grid.aliens[grid.aliens.length - 1];
+                const firstAlien = grid.aliens[0];
+                const lastAlien = grid.aliens[grid.aliens.length - 1];
 
-                  grid.width =
-                      lastAlien.position.x -
-                      firstAlien.position.x +
-                      lastAlien.width;
-                  grid.position.x = firstAlien.position.x;
-                } else {
-                    grids.splice(gridIndex, 1);
-                    if (grids.length === 0) {
-                      waitingForFirstWave = false;
-                    }
+                grid.width =
+                  lastAlien.position.x -
+                  firstAlien.position.x +
+                  lastAlien.width;
+                grid.position.x = firstAlien.position.x;
+              } else {
+                grids.splice(gridIndex, 1);
+                if (grids.length === 0) {
+                  waitingForFirstWave = false;
                 }
               }
+            }
           }, 0);
         }
       });
@@ -1198,71 +1399,115 @@ missiles.forEach((missile, m) => {
     nuke.update();
 
     if (nuke.isFlashing) {
-        if (nuke.flashFrames > 0) {
-            // Flash white
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            nuke.flashFrames--;
-        } else {
-            // End flashing phase, start shockwave
-            nuke.isFlashing = false;
-            nuke.shockwaveActive = true;
-            nuke.shockwaveRadius = 10;
-            nuke.shockwaveAlpha = 1;
-        }
+      if (nuke.flashFrames > 0) {
+        // Flash white
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        nuke.flashFrames--;
+      } else {
+        // End flashing phase, start shockwave
+        nuke.isFlashing = false;
+        nuke.shockwaveActive = true;
+        nuke.shockwaveRadius = 10;
+        nuke.shockwaveAlpha = 1;
+      }
     }
 
     if (nuke.shockwaveActive) {
-        // Draw expanding ripple ring
-        ctx.save();
-        ctx.strokeStyle = `rgba(255, 255, 255, ${nuke.shockwaveAlpha})`;
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.arc(canvas.width / 2, canvas.height / 2, nuke.shockwaveRadius, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
+      // Draw expanding ripple ring
+      ctx.save();
+      ctx.strokeStyle = `rgba(255, 255, 255, ${nuke.shockwaveAlpha})`;
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(
+        canvas.width / 2,
+        canvas.height / 2,
+        nuke.shockwaveRadius,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+      ctx.restore();
 
-        // Update ripple expansion
-        nuke.shockwaveRadius += 20;  // expansion speed
-        nuke.shockwaveAlpha -= 0.02; // fade out
+      // Update ripple expansion
+      nuke.shockwaveRadius += 20; // expansion speed
+      nuke.shockwaveAlpha -= 0.02; // fade out
 
-        if (nuke.shockwaveRadius >= nuke.shockwaveMaxRadius || nuke.shockwaveAlpha <= 0) {
-            nuke.shockwaveActive = false;
-            nukeProjectiles.splice(index, 1); // Remove nuke after effect finishes
-        }
-    }
-});
-
- // Only allow shooting if NOT waiting for first wave
- if (!waitingForFirstWave) {
-  grids.forEach((grid, gridIndex) => {
-      grid.update();
-
-      if (frames % 100 === 0 && grid.aliens.length > 0) {
-          grid.aliens[Math.floor(Math.random() * grid.aliens.length)].shoot(alienBullets);
+      if (
+        nuke.shockwaveRadius >= nuke.shockwaveMaxRadius ||
+        nuke.shockwaveAlpha <= 0
+      ) {
+        nuke.shockwaveActive = false;
+        nukeProjectiles.splice(index, 1); // Remove nuke after effect finishes
       }
-
-      grid.aliens.forEach((alien, i) => {
-          alien.update({ velocity: grid.velocity });
-      });
+    }
   });
-}
+
+  // Need to delay shooting for 2 secs until first wave is ready
+  // Only allow shooting if NOT waiting for first wave
+  if (!waitingForFirstWave) {
+    //   grids.forEach((grid, gridIndex) => {
+    //       grid.update();
+    // if (frames % 100 === 0 && grid.aliens.length > 0) {
+    //   grid.aliens[Math.floor(Math.random() * grid.aliens.length)].shoot(
+    //     alienBullets
+    //   );
+    // }a
+    //       grid.aliens.forEach((alien, i) => {
+    //           alien.update({ velocity: grid.velocity });
+    //       });
+    //   });
+  }
 
   frames++;
 }
 
-/*----------------------------- Event Listeners -----------------------------*/
+/*----------------------------- Event Listeners -------------------------------*/
 
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
+//----------------------------- Event Listeners | Audio ----------------------
 
-//----------------------------- Event Listeners | Buttons -----------------
+// As soon as DOM is ready, set up the right audio
+// window.addEventListener('DOMContentLoaded', setupAudio); ### CHECK and see if this works
+
+// Wire your “Start” button to both stop home music and launch the game
+if (startBtn) {
+  startBtn.addEventListener('click', startGame);
+}
+
+function initBackgroundMusicOnce() {
+  const playMusic = () => {
+    if (backgroundMusic.paused) {
+      backgroundMusic.currentTime = 0;
+      backgroundMusic.play().catch(err => {
+        console.warn("Autoplay blocked:", err);
+      });
+    }
+    window.removeEventListener("keydown", playMusic);
+    window.removeEventListener("mousedown", playMusic);
+    window.removeEventListener("touchstart", playMusic);
+  };
+
+  window.addEventListener("keydown", playMusic);
+  window.addEventListener("mousedown", playMusic);
+  window.addEventListener("touchstart", playMusic);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  initBackgroundMusicOnce();
+  resizeCanvas();
+  updateNukeDisplay(); // Update nuke display on load
+  loadHighScore();
+  window.addEventListener("resize", resizeCanvas);
+});
+
+//----------------------------- Event Listeners | Buttons ----------------------
+
 switchBtn.addEventListener("click", () => player.switchPlayer());
 restartBtn.addEventListener("click", restartGame);
 
-//----------------------------- Event Listeners | Key Presses -------------
+//----------------------------- Event Listeners | Key Presses ------------------
 addEventListener("keydown", (event) => {
-  console.log("Key pressed:", event.key);  // Optional debug
+  console.log("Key pressed:", event.key); // Optional debug
   handleKey(event.key);
 });
 
@@ -1270,9 +1515,13 @@ addEventListener("keyup", (event) => {
   handleKeyRelease(event.key);
 });
 
+//----------------------------- Event Listeners | Load High Score  -------------
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadHighScore();
+});
+
 /*------------------------------- Initial Call --------------------------------*/
-//--------------------Game Start -------------------------------------------
-window.focus(); 
-animate();
-
-
+//--------------------Game Loop -------------------------------------------
+// window.focus();
+animate()

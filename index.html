@@ -6,12 +6,13 @@
     <meta charset="UTF-8">
     <title>Game Intro Screen</title>
     <link rel="stylesheet" href="style.css">
+    <script type="module" defer src="./data.js"></script>
+    <script type="module" defer src="./app.js"></script>
 </head>
 
 <body>
     <div class="home-screen">
         <h1>Space Invaders</h1>
-        <p id="workText">Work In Progress</p>
 
         <!-- Intro Video or GIF -->
         <div class="media-box">
@@ -20,14 +21,31 @@
             <!-- or <img src="intro.gif" alt="Intro"> -->
         </div>
 
+        <audio src="./audio/Intro_Background_SFX.mp3" autoplay loop id="homeAudio">
+            Your browser doesn’t support audio.
+        </audio>
+
         <!-- Instructions panel -->
         <div id="instructionsPanel" style="display: none;">
             <h2>Instructions</h2>
-            <p> Keyboard Control</p>
-            <p> - A/D keys to move left/right</p>
-            <p> - Space key to shoot</p>
-            <p> - M to launch missiles</p>
-            <p> - B to launch nuke</p>
+
+            <div class="instructions-grid">
+                <div class="section">
+                  <h3>Keyboard Control:</h3>
+                  <p>- 'A' & 'D' keys to move left/right</p>
+                  <p>- 'Space' key to shoot</p>
+                  <p>- 'M' key to launch missiles</p>
+                  <p>- 'B' to launch nuke</p>
+                </div>
+                <div class="section">
+                  <h3>Game Play:</h3>
+                  <p>- Players lives = 3</p>
+                  <p>- Nukes available = 2</p>
+                  <p>- Shoot the UFOs to score points</p>
+                  <p>- Avoid UFOs from reaching the ground</p>
+                </div>
+              </div>
+            
             <img src="instructions.png" alt="Controls Guide" width="400">
             <button id="closeInstructionsBtn">Close</button>
         </div>
