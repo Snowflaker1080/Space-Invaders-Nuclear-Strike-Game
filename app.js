@@ -552,46 +552,52 @@ class Nuke {
     }, flashDuration);
   }
 
- startShockwave() {
-  this.shockwaveActive = true;
-  this.shockwaveRadius = 10;
-  this.shockwaveAlpha = 1;
+  startShockwave() {
+    this.shockwaveActive = true;
+    this.shockwaveRadius = 10;
+    this.shockwaveAlpha = 1;
 
-  let rippleCount = 0;
-  const maxRipples = 2;
-  const rippleDelay = 500; // milliseconds between ripples
+    let rippleCount = 0;
+    const maxRipples = 2;
+    const rippleDelay = 500; // milliseconds between ripples
 
-  const startNextRipple = () => {
-    if (rippleCount >= maxRipples) return;
+    const startNextRipple = () => {
+      if (rippleCount >= maxRipples) return;
 
-    let localRadius = 10;
-    let localAlpha = 1;
-    const localMax = Math.max(canvas.width, canvas.height);
+      let localRadius = 10;
+      let localAlpha = 1;
+      const localMax = Math.max(canvas.width, canvas.height);
 
-    const animateRipple = () => {
-      ctx.save();
-      ctx.strokeStyle = `rgba(255, 255, 255, ${localAlpha})`;
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.arc(canvas.width / 2, canvas.height / 2, localRadius, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+      const animateRipple = () => {
+        ctx.save();
+        ctx.strokeStyle = `rgba(255, 255, 255, ${localAlpha})`;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2,
+          canvas.height / 2,
+          localRadius,
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
+        ctx.restore();
 
-      localRadius += 20;
-      localAlpha -= 0.02;
+        localRadius += 20;
+        localAlpha -= 0.02;
 
-      if (localRadius < localMax && localAlpha > 0) {
-        requestAnimationFrame(animateRipple);
-      }
+        if (localRadius < localMax && localAlpha > 0) {
+          requestAnimationFrame(animateRipple);
+        }
+      };
+
+      animateRipple();
+      rippleCount++;
+      setTimeout(startNextRipple, rippleDelay);
     };
 
-    animateRipple();
-    rippleCount++;
-    setTimeout(startNextRipple, rippleDelay);
-  };
-
-  startNextRipple();
-}
+    startNextRipple();
+  }
 }
 /*--------------------------- Explosion Class ---------------------------*/
 class Explosion {
@@ -803,19 +809,21 @@ function handleHoldEnd(key, buttonEl) {
   buttonEl.classList.remove("pressed");
 }
 
+function simulateKeyTap(key) {
+  handleKey(key);
+  setTimeout(() => handleKeyRelease(key), 100);
+}
+
 function handleMobileFire() {
-  keys.space.pressed = true;
-  setTimeout(() => (keys.space.pressed = false), 100);
+  simulateKeyTap("space");
 }
 
 function handleMobileMissile() {
-  keys.m.pressed = true;
-  setTimeout(() => (keys.m.pressed = false), 100);
+  simulateKeyTap("m");
 }
 
 function handleMobileNuke() {
-  // Replace with nuke action function or key simulation if applicable
-  launchNuke(); // assuming you have this defined elsewhere
+  simulateKeyTap("b");
 }
 
 /*----------------- Audio & Volume Control Handlers-----------------------------------------------------*/
@@ -1326,7 +1334,7 @@ function animate() {
         });
 
         // Play player Explosion sound
-        playerExplosionSound.currentTime = 0.0; // sound start time
+        playerExplosionSound.currentTime = 0; // sound start time
         playerExplosionSound.play();
 
         if (playerLives <= 0) {
@@ -1554,6 +1562,23 @@ window.addEventListener("DOMContentLoaded", () => {
   canvas = document.getElementById("gameCanvas");
   if (!canvas) return;
   ctx = canvas.getContext("2d");
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  player = new Player();
+  initBackgroundMusicOnce();
+  resizeCanvas();
+  initStars();
+  updateNukeDisplay(); // Update nuke display on load
+  loadHighScore(); // Pull high score from localStorage
+  applyMasterVolume(); // Apply initial volume settings
+  updateVolumeDisplay(); // Update volume display on load
+
+  window.addEventListener("resize", resizeCanvas);
+  window.addEventListener("orientationchange", resizeCanvas);
+
+  animate();
+
   // Volume Control ----exists & run only on game.html
   if (volumeUpBtn && volumeDownBtn && muteBtn) {
     volumeUpBtn.addEventListener("click", () => {
@@ -1577,7 +1602,7 @@ window.addEventListener("DOMContentLoaded", () => {
     restartBtn.addEventListener("click", restartGame);
   }
 
-  //-----Event Listeners | Mobile Button Presses - exsists & run only on game.html
+  //-----Event Listeners | Mobile Button Presses - exists & run only on game.html
 
   if (leftBtn && rightBtn) {
     leftBtn.addEventListener("touchstart", () => handleHoldStart("a", leftBtn));
@@ -1605,28 +1630,19 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (fireBtn) fireBtn.addEventListener("touchstart", handleMobileFire);
-  if (missileBtn)
+  if (fireBtn) {
+    fireBtn.addEventListener("touchstart", handleMobileFire);
+    fireBtn.addEventListener("click", handleMobileFire);
+  }
+  if (missileBtn) {
     missileBtn.addEventListener("touchstart", handleMobileMissile);
-  if (nukeBtn) nukeBtn.addEventListener("touchstart", handleMobileNuke);
-
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  player = new Player();
-  initBackgroundMusicOnce();
-  resizeCanvas();
-  initStars();
-  updateNukeDisplay(); // Update nuke display on load
-  loadHighScore(); // Pull high score from localStorage
-  applyMasterVolume(); // Apply initial volume settings
-  updateVolumeDisplay(); // Update volume display on load
-
-  window.addEventListener("resize", resizeCanvas);
-  window.addEventListener("orientationchange", resizeCanvas);
-
-  animate();
+    missileBtn.addEventListener("click", handleMobileMissile);
+  }
+  if (nukeBtn) {
+    nukeBtn.addEventListener("touchstart", handleMobileNuke);
+    nukeBtn.addEventListener("click", handleMobileNuke);
+  }
 });
-
 //----------------------------- Event Listeners | Keyboard Input ---------------------------
 
 addEventListener("keydown", (event) => {
