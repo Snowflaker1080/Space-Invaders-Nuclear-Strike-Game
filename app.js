@@ -76,6 +76,7 @@ const volumeUpBtn = document.getElementById("volumeUpBtn");
 const volumeDownBtn = document.getElementById("volumeDownBtn");
 const muteBtn = document.getElementById("muteBtn");
 
+const alienBulletLaunchSound = new Audio("./audio/Alien_Bullet_Laser_Shoot_SFX.mp3");
 const bulletLaunchSound = new Audio("./audio/Laser_Gun_SoundFX.mp3");
 const missileLaunchSound = new Audio("./audio/Missile_Launch_SoundFX.mp3");
 const nukeLaunchSound = new Audio("./audio/Nuclear_Blast_SoundFX.mp3");
@@ -215,7 +216,11 @@ class Alien {
         velocity: { x: 0, y: 5 },
       })
     );
-  }
+    if(alienBulletLaunchSound) {
+      alienBulletLaunchSound.currentTime = 0.0; // sound start time
+      alienBulletLaunchSound.play();
+    }
+  };
 }
 
 /*--------------------------- Grid Class ---------------------------*/
@@ -862,6 +867,7 @@ function startGame() {
 }
 
 function applyMasterVolume() {
+  alienBulletLaunchSound.volume = 0.2 * masterVolume; 
   bulletLaunchSound.volume = 0.2 * masterVolume;
   missileLaunchSound.volume = 0.5 * masterVolume;
   nukeLaunchSound.volume = 1.0 * masterVolume;
