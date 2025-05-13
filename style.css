@@ -1,11 +1,11 @@
 /* ------- Shared Styles --------------------------------------------- */
 
 html, body {
-  margin: 0;
-  padding: 0;
-  overflow: auto; /*mobile*/
+margin: 0;
+padding: 0;
+height: 100%;
+  overflow: hidden; /*mobile*/
   -webkit-overflow-scrolling: touch;
-  height: 100%;
   touch-action: manipulation;
 }
 
@@ -185,11 +185,11 @@ body {
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(-20px);
+        transform: translateY(-20px);
     }
     to {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
     }
 }
 
@@ -204,11 +204,9 @@ body {
     }
 }
 
-
-
 #scoreContainer {
     position: absolute;
-    top: 4%;
+    top: 6%;
     left: 1%;
     padding: 8px 12px;
     background-color: rgba(0, 0, 0, 0.1);
@@ -222,7 +220,7 @@ body {
 
 #highScoreContainer {
     position: absolute;
-    top: 4%;
+    top: 6%;
     right: 1%;
     padding: 8px 12px;
     background-color: rgba(0, 0, 0, 0.1);
@@ -235,18 +233,25 @@ body {
 }
 
 #gameContainer {
+    top: 5%;
     position: relative;
+    width: 100vw;
+    height:100vh;
 }
 
 #gameCanvas {
     display: block;
-    width: 100%;
-    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -10;
   }
 
 #gameTitle {
     position: absolute;
-    top: 20px;
+    top: 10%;
     left: 50%;
     transform: translateX(-50%);
     font-family: 'Arial', sans-serif;
@@ -373,9 +378,9 @@ body {
 #livesContainer {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 10px;
     position: fixed;
-    bottom: 15%;
+    bottom: 18%;
     left: 1%; /* adjust as needed, depends on restart button width + padding */
     z-index: 10;
 }
@@ -407,7 +412,7 @@ body {
     align-items: center;
     gap: 5px;
     position: fixed;
-    bottom: 10%;
+    bottom: 12%;
     left: 1%;
     z-index: 10;
   }
@@ -532,9 +537,12 @@ body {
 
   #volumeContainer {
     position: fixed;
-    top: 1%;
-    right: 15%;
+    top: 50%;
+    right: 1%;
+    transform: translateY(-50%);
     display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: clamp(10px, 8vw, 20px);
     z-index: 2000;
   }
@@ -560,14 +568,15 @@ body {
     background-color: #888;
   }
 
+    /* Volume display */
   #volumeContainer span {
     display: flex; 
     align-items: center;
     justify-content: center;
-    font-size: clamp(10px, 2vw, 18px);
+    font-size: clamp(12px, 2vw, 18px);
     border-radius: 5%; 
-    width: 60x;
-    height: 50px;
+    width: 50px;
+    height: 40px;
     background-color: #000;
     color: white;
     border: none;
@@ -579,3 +588,15 @@ body {
     transform: scale(0.9);
     background-color: #444;
   }
+
+  /* Dimmed buttons when muted */
+.volume-dimmed {
+  opacity: 0.0;
+  pointer-events: none; /* prevents interaction */
+}
+
+/* Bright highlight on mute button when active */
+#volumeContainer button.mute-active {
+  background-color: white;
+  box-shadow: 0 0 10px #ff5555;
+}

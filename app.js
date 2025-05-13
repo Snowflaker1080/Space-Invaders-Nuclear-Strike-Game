@@ -46,6 +46,7 @@ let game = {
   active: true,
   showGameOverText: false,
   paused: false,
+  flashing: false,
 };
 let player;
 let score = 0;
@@ -122,7 +123,7 @@ class Player {
       this.width = image.width * scale;
       this.height = image.height * scale;
       this.position.x = canvas.width / 2 - this.width / 2;
-      this.position.y = canvas.height - this.height - 70;
+      this.position.y = canvas.height - this.height - 30;
       updateLivesDisplay();
       cancelAnimationFrame(animationId);
       animate();
@@ -520,13 +521,14 @@ class Nuke {
 
   triggerDetonation() {
     game.paused = true;
+    game.flashing = true;
 
-    const flashDuration = 100;
+    const flashDuration = 200;
     const maxFlashes = 6;
     let flashes = 0;
 
     const flashInterval = setInterval(() => {
-      ctx.fillStyle = flashes % 2 === 0 ? "white" : "black";
+      ctx.fillStyle = flashes % 1 === 0 ? "white" : "black";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       flashes++;
@@ -551,6 +553,7 @@ class Nuke {
         explosions.length = 0;
         muzzleFlashes.length = 0;
 
+        game.flashing = false; 
         // Start the ripple after flashing
         this.startShockwave();
       }
@@ -905,6 +908,7 @@ function decreaseVolume() {
 function toggleMute() {
   muted = !muted;
   const allSounds = [
+    alienBulletLaunchSound,
     bulletLaunchSound,
     missileLaunchSound,
     nukeLaunchSound,
@@ -914,6 +918,16 @@ function toggleMute() {
     missileExplosionSound,
     backgroundMusic,
   ];
+
+  if (muted) {
+    volumeUpBtn.classList.add("volume-dimmed");
+    volumeDownBtn.classList.add("volume-dimmed");
+    muteBtn.classList.add("mute-active");
+  } else {
+    volumeUpBtn.classList.remove("volume-dimmed");
+    volumeDownBtn.classList.remove("volume-dimmed");
+    muteBtn.classList.remove("mute-active");
+  }
   allSounds.forEach((sound) => (sound.muted = muted));
   muteBtn.textContent = muted ? "🔈" : "🔇";
   updateVolumeDisplay();
@@ -1206,6 +1220,9 @@ function updateNukeDisplay() {
 function animate() {
   // Store ID, game update and draw black background
   animationId = requestAnimationFrame(animate);
+
+  if (game.flashing) return; // skip during nuke flash
+
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -1571,10 +1588,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  player = new Player();
+  
   initBackgroundMusicOnce();
   resizeCanvas();
   initStars();
+  player = new Player();
   updateNukeDisplay(); // Update nuke display on load
   loadHighScore(); // Pull high score from localStorage
   applyMasterVolume(); // Apply initial volume settings
