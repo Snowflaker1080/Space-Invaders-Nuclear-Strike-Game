@@ -1,4 +1,4 @@
-/* ------- Shared Styles --- */
+/* ------- Shared Styles --------------------------------------------- */
 
 html, body {
   margin: 0;
@@ -15,11 +15,12 @@ canvas {
     touch-action: none; /* disables default pinch/zoom for mobile*/ 
   }
 
-/* --- Home Screen Specific --- */
+/* ----------- Home Screen Specific ---------------------------------- */
 
 @media (max-width: 600px) {
     .controls-section {
         flex-direction: column;
+        gap: 10px; /* space between image and button */
     }
 }
 
@@ -29,7 +30,7 @@ canvas {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -1; /* Puts it behind everything */
+    z-index: -1;
     pointer-events: none; /* Allows clicks to pass through */
   }
 
@@ -53,14 +54,13 @@ body {
 .media-box {
     max-width: 90vh;
     max-height: 90vh;
-    margin: 20px auto;
+    margin: 0 auto 20px;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
 }
 
-.media-box video,
 .media-box img {
     width: 100%;
     height: auto;
@@ -71,7 +71,7 @@ body {
 
 .button-panel {
     position: fixed;
-    bottom: 5%;
+    bottom: 8%;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -81,7 +81,7 @@ body {
 
 .button-panel button {
     padding: 10px 20px;
-    font-size: clamp(16px, 3vw, 16px);
+    font-size: clamp(12px, 3vw, 14px);
     border: none;
     border-radius: 5px;
     background-color: #333;
@@ -101,10 +101,10 @@ body {
     transform: translate(-50%, -50%);
     background: rgba(0, 0, 0, 1.1);
     color: white;
-    padding: 20px;
+    padding: 10px;
     border-radius: 12px;
     max-width: 800px;
-    width: 80%;
+    width: 90%;
     text-align: left;
     z-index: 2000;
     display: none;
@@ -120,7 +120,7 @@ body {
 }
 
 #instructionsPanel p {
-    font-size: clamp(16px, 3vw, 16px);
+    font-size: clamp(14px, 3vw, 16px);
     line-height: 1.5;
     margin-bottom: 5%;
     text-indent: 5%;
@@ -161,15 +161,16 @@ body {
 
 
 #closeInstructionsBtn {
+    display: block;
+    margin:auto;
     padding: 10px 20px;
-    font-size: clamp(16px, 3vw, 16px);
+    font-size: clamp(12px, 3vw, 16px);
     border: none;
     border-radius: 5px;
     background-color: #dc3545;
     color: white;
     cursor: pointer;
     transition: background 0.3s;
-    float: right;
 }
 
 #closeInstructionsBtn:hover {

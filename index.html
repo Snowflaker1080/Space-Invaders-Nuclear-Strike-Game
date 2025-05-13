@@ -3,11 +3,9 @@
 <html lang="en">
 
 
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <title>Space Invaders</title>
     <link rel="stylesheet" href="style.css">
     <script type="module" defer src="./data.js"></script>
@@ -64,20 +62,6 @@
         </div>
     </div>  
  
-    <script>
-        document.getElementById('startGameBtn').addEventListener('click', () => {
-            window.location.href ='game.html';
-        });
-        document.getElementById('instructionsBtn').addEventListener('click', () => {
-            const panel = document.getElementById('instructionsPanel');
-            panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
-        });
-
-        document.getElementById('closeInstructionsBtn').addEventListener('click', () => {
-            const panel = document.getElementById('instructionsPanel');
-            panel.style.display = 'none';
-        });
-    </script>
 </body>
 
 </html>
