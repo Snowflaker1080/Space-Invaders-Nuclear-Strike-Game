@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <title>Space Invaders</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" defer src="./data.js"></script>
@@ -13,6 +14,10 @@
 
 <body>
   <main>
+
+      <canvas id="gameCanvas">
+        Your browser does not support the canvas element.
+      </canvas>
 
     <div>
       <p id="scoreContainer">
@@ -28,9 +33,7 @@
     <div id="gameContainer">
       <h1 id="gameTitle" class="hidden">Space Invaders</h1>
 
-      <canvas id="gameCanvas">
-        Your browser does not support the canvas element.
-      </canvas>
+
 
       <div class="game-ui">
         <button id="returnHomeBtn">🏠 Home</button>
@@ -43,13 +46,13 @@
 
       <div id="gameOverContainer" class="hidden">
         <h2 id="gameOverText">GAME OVER</h2>
-        <p id="restartText">Press Restart</p>
+        <p id="restartText">Press 🔁 Restart Game</p>
       </div>
 
     </div>
 
     <div id="controls">
-      <button id="restartGameBtn">Restart Game</button>
+      <button id="restartGameBtn">🔁 Restart Game</button>
 
       <div id="livesContainer">
         <img class="life-icon">
