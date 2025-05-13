@@ -3,7 +3,8 @@
 html, body {
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow: auto; /*mobile*/
+  -webkit-overflow-scrolling: touch;
   height: 100%;
   touch-action: manipulation;
 }

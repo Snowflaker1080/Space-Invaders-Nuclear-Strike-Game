@@ -113,3 +113,16 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("touchstart", tryPlayHomeAudio, { once: true });
   window.addEventListener("keydown", tryPlayHomeAudio, { once: true });
 });
+
+/*------------------------------- Mobile Browser Address Bar Min --------------------------------*/
+function hideAddressBar() {
+  window.scrollTo(0, 1);
+}
+
+window.addEventListener("load", () => {
+  setTimeout(hideAddressBar, 100); // delay needed on some devices
+});
+
+window.addEventListener("orientationchange", () => {
+  setTimeout(hideAddressBar, 100);
+});
