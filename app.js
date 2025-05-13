@@ -1630,17 +1630,39 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (fireBtn) {
-    fireBtn.addEventListener("touchstart", handleMobileFire);
-    fireBtn.addEventListener("click", handleMobileFire);
-  }
-  if (missileBtn) {
-    missileBtn.addEventListener("touchstart", handleMobileMissile);
-    missileBtn.addEventListener("click", handleMobileMissile);
-  }
-  if (nukeBtn) {
-    nukeBtn.addEventListener("touchstart", handleMobileNuke);
-    nukeBtn.addEventListener("click", handleMobileNuke);
+ if (fireBtn && missileBtn && nukeBtn) {
+  // --- Fire Button: Spacebar ---
+  fireBtn.addEventListener("touchstart", () => handleKey(" "));
+  fireBtn.addEventListener("mousedown", () => handleKey(" "));
+  fireBtn.addEventListener("touchend", () => handleKeyRelease(" "));
+  fireBtn.addEventListener("mouseup", () => handleKeyRelease(" "));
+  fireBtn.addEventListener("mouseleave", () => handleKeyRelease(" "));
+  fireBtn.addEventListener("click", () => {
+    handleKey(" ");
+    setTimeout(() => handleKeyRelease(" "), 100);
+  });
+
+  // --- Missile Button: 'M' Key ---
+  missileBtn.addEventListener("touchstart", () => handleKey("m"));
+  missileBtn.addEventListener("mousedown", () => handleKey("m"));
+  missileBtn.addEventListener("touchend", () => handleKeyRelease("m"));
+  missileBtn.addEventListener("mouseup", () => handleKeyRelease("m"));
+  missileBtn.addEventListener("mouseleave", () => handleKeyRelease("m"));
+  missileBtn.addEventListener("click", () => {
+    handleKey("m");
+   setTimeout(() => handleKeyRelease("m"), 100);
+  });
+
+  // --- Nuke Button: 'B' Key ---
+  nukeBtn.addEventListener("touchstart", () => handleKey("b"));
+  nukeBtn.addEventListener("mousedown", () => handleKey("b"));
+  nukeBtn.addEventListener("touchend", () => handleKeyRelease("b"));
+  nukeBtn.addEventListener("mouseup", () => handleKeyRelease("b"));
+  nukeBtn.addEventListener("mouseleave", () => handleKeyRelease("b"));
+  nukeBtn.addEventListener("click", () => {
+    handleKey("b");
+    setTimeout(() => handleKeyRelease("b"), 100);
+  });
   }
 });
 //----------------------------- Event Listeners | Keyboard Input ---------------------------
