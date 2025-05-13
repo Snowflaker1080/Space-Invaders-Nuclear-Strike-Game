@@ -2,6 +2,7 @@ import { players, aliens, weapons } from "./data.js";
 
 /*-------------------------------- Constants --------------------------------*/
 const alienBullets = [];
+const baseWidth = 1920; // base design resolution
 const bullets = [];
 const explosions = [];
 const grids = [];
@@ -49,6 +50,7 @@ let game = {
   flashing: false,
 };
 let player;
+let scaleFactor = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
 let score = 0;
 let highScore = 0;
 let waitingForFirstWave = true;
@@ -77,7 +79,9 @@ const volumeUpBtn = document.getElementById("volumeUpBtn");
 const volumeDownBtn = document.getElementById("volumeDownBtn");
 const muteBtn = document.getElementById("muteBtn");
 
-const alienBulletLaunchSound = new Audio("./audio/Alien_Bullet_Laser_Shoot_SFX.mp3");
+const alienBulletLaunchSound = new Audio(
+  "./audio/Alien_Bullet_Laser_Shoot_SFX.mp3"
+);
 const bulletLaunchSound = new Audio("./audio/Laser_Gun_SoundFX.mp3");
 const missileLaunchSound = new Audio("./audio/Missile_Launch_SoundFX.mp3");
 const nukeLaunchSound = new Audio("./audio/Nuclear_Blast_SoundFX.mp3");
@@ -118,7 +122,7 @@ class Player {
     const image = new Image();
     image.src = src;
     image.onload = () => {
-      const scale = 0.15;
+      const scale = 0.15 * scaleFactor;
       this.image = image;
       this.width = image.width * scale;
       this.height = image.height * scale;
@@ -177,18 +181,10 @@ class Alien {
   constructor({ position, image }) {
     this.position = position;
     this.velocity = { x: 0, y: 0 };
-    this.width = 60;
-    this.height = 60;
+    this.width = 60 * scaleFactor; // Dynamically calculate width
+    this.height = 60 * scaleFactor; // Dynamically calculate height
     this.image = new Image();
     this.image.src = image;
-
-    // Debug loaders
-    this.image.onload = () => {
-      console.log(`Alien image loaded: ${image}`);
-    };
-    this.image.onerror = () => {
-      console.error(`Failed to load alien image: ${image}`);
-    };
   }
 
   draw() {
@@ -217,13 +213,12 @@ class Alien {
         velocity: { x: 0, y: 5 },
       })
     );
-    if(alienBulletLaunchSound) {
+    if (alienBulletLaunchSound) {
       alienBulletLaunchSound.currentTime = 0.0; // sound start time
       alienBulletLaunchSound.play();
     }
-  };
+  }
 }
-
 /*--------------------------- Grid Class ---------------------------*/
 class Grid {
   constructor(alienType) {
@@ -231,21 +226,33 @@ class Grid {
     this.velocity = { x: 3, y: 0 };
     this.aliens = [];
 
-    const columns = Math.floor(Math.random() * 10 + 5);
-    const rows = Math.floor(Math.random() * 5 + 2);
+    const scale = scaleFactor;
+
+    // Responsive column and row count
+    const baseCols = Math.floor(Math.random() * 10 + 5);
+    const baseRows = Math.floor(Math.random() * 5 + 2);
+    const columns = Math.max(3, Math.min(12, Math.round(baseCols * scale)));
+    const rows = Math.max(1, Math.min(6, Math.round(baseRows * scale)));
+
+    // Responsive spacing
+    const alienSpacingX = 80 * scale;
+    const alienSpacingY = 80 * scale;
 
     for (let x = 0; x < columns; x++) {
       for (let y = 0; y < rows; y++) {
         this.aliens.push(
           new Alien({
-            position: { x: x * 80, y: y * 80 },
+            position: {
+              x: x * alienSpacingX,
+              y: y * alienSpacingY,
+            },
             image: alienType.image,
           })
         );
       }
     }
-    // Dynamically calculate width
-    this.width = columns * 80;
+
+    this.width = columns * alienSpacingX;
   }
 
   update() {
@@ -322,7 +329,7 @@ class Bullet {
   constructor({ position, velocity }) {
     this.position = position;
     this.velocity = velocity;
-    this.radius = 6;
+    this.radius = 6 * scaleFactor; // Dynamically calculate radius, scale for mobile vs desktop
   }
 
   draw() {
@@ -345,8 +352,8 @@ class AlienBullet {
   constructor({ position, velocity }) {
     this.position = position;
     this.velocity = velocity;
-    this.width = 6;
-    this.height = 12;
+    this.width = 6 * scaleFactor; // Dynamically calculate width
+    this.height = 12 * scaleFactor; // Dynamically calculate height
   }
   draw() {
     ctx.fillStyle = "white";
@@ -364,11 +371,11 @@ class Missile {
   constructor({ position, velocity, pattern }) {
     this.position = { ...position };
     this.velocity = { x: 0, y: -5 };
-    this.width = 10;
-    this.height = 30;
-    this.trail = [];
+    this.width = 10 * scaleFactor; // Dynamically calculate width
+    this.height = 30 * scaleFactor; // Dynamically calculate height
     this.patternStartTime = Date.now();
     this.pattern = pattern;
+    this.trail = [];
   }
 
   static lastPattern = 2;
@@ -459,8 +466,8 @@ class Nuke {
       y: (centerY - this.position.y) / durationFrames,
     };
 
-    this.radius = 2.2; // nuke start size
-    this.minRadius = 0.5; // target shrink size
+    this.radius = 2.2 * scaleFactor; // nuke start size
+    this.minRadius = 0.5 * scaleFactor; // target shrink size
     this.shrinkSpeed = 0.05; // shrink smoothly
 
     this.collapsed = false;
@@ -553,7 +560,7 @@ class Nuke {
         explosions.length = 0;
         muzzleFlashes.length = 0;
 
-        game.flashing = false; 
+        game.flashing = false;
         // Start the ripple after flashing
         this.startShockwave();
       }
@@ -870,7 +877,7 @@ function startGame() {
 }
 
 function applyMasterVolume() {
-  alienBulletLaunchSound.volume = 0.2 * masterVolume; 
+  alienBulletLaunchSound.volume = 0.2 * masterVolume;
   bulletLaunchSound.volume = 0.2 * masterVolume;
   missileLaunchSound.volume = 0.5 * masterVolume;
   nukeLaunchSound.volume = 1.0 * masterVolume;
@@ -943,7 +950,13 @@ function animateButton(button) {
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+
+  // Adjust scale factor based on width or height
+  scaleFactor = Math.min(canvas.width / 1280, canvas.height / 720);
+
   if (player && player.image) {
+    player.width = player.image.width * 0.15 * scaleFactor;
+    player.height = player.image.height * 0.15 * scaleFactor;
     player.position.x = canvas.width / 2 - player.width / 2;
     player.position.y = canvas.height - player.height - 30;
   }
@@ -953,12 +966,14 @@ function resizeCanvas() {
 
 function initStars() {
   stars.length = 0;
-  for (let i = 0; i < starCount; i++) {
+  const adjustedStarCount = Math.floor(starCount * scaleFactor);
+
+  for (let i = 0; i < adjustedStarCount; i++) {
     stars.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      radius: Math.random() * 2 + 0.5,
-      velocity: { x: 0, y: 0.5 },
+      radius: Math.random() * 2 * scaleFactor + 0.5,
+      velocity: { x: 0, y: 0.5 * scaleFactor },
       alpha: Math.random(),
       alphaChange: Math.random() * 0.02 + 0.005,
     });
@@ -1409,7 +1424,7 @@ function animate() {
     frames % randomInterval === 0
   ) {
     spawnAlienWave();
-    randomInterval = Math.floor(Math.random() * 500 + 500);
+    randomInterval = Math.floor(Math.random() * 300 + 500);
     frames = 0;
   }
 
@@ -1424,10 +1439,27 @@ function animate() {
         );
       }
     }
-
     grid.aliens.forEach((alien, i) => {
       alien.update({ velocity: grid.velocity });
 
+      if (alien.position.y + alien.height >= canvas.height) {
+        if (!game.over) {
+          playerLives = 0;
+          updateLivesDisplay();
+
+          createExplosions({ object: player, color: "white", fades: true });
+          playerKilledSound.currentTime = 0;
+          playerKilledSound.play();
+          player.opacity = 0;
+
+          game.over = true;
+          if (!gameOverTimeout) {
+            gameOverTimeout = setTimeout(() => triggerGameOver(), 3000);
+          }
+        }
+      }
+
+/*-------------------------------- Functions Animate | Bullet Collision --------------------------------*/
       bullets.forEach((projectile, j) => {
         if (
           projectile.position.y - projectile.radius <=
@@ -1477,6 +1509,8 @@ function animate() {
         }
       });
 
+      /*-------------------------------- Functions Animate | Missile Collision --------------------------------*/
+
       missiles.forEach((missile, m) => {
         if (
           missile.position.y <= alien.position.y + alien.height &&
@@ -1524,6 +1558,8 @@ function animate() {
       });
     });
   });
+
+  /*-------------------------------- Functions Animate | Nuclear Collision --------------------------------*/
 
   // Draw shockwave effects LAST to overlay everything
   nukeProjectiles.forEach((nuke, index) => {
@@ -1588,7 +1624,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  
+
   initBackgroundMusicOnce();
   resizeCanvas();
   initStars();
@@ -1654,39 +1690,30 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
- if (fireBtn && missileBtn && nukeBtn) {
-  // --- Fire Button: Spacebar ---
-  fireBtn.addEventListener("touchstart", () => handleKey(" "));
-  fireBtn.addEventListener("mousedown", () => handleKey(" "));
-  fireBtn.addEventListener("touchend", () => handleKeyRelease(" "));
-  fireBtn.addEventListener("mouseup", () => handleKeyRelease(" "));
-  fireBtn.addEventListener("mouseleave", () => handleKeyRelease(" "));
-  fireBtn.addEventListener("click", () => {
-    handleKey(" ");
-    setTimeout(() => handleKeyRelease(" "), 100);
-  });
+  if (fireBtn && missileBtn && nukeBtn) {
+    // --- Fire Button: Spacebar ---
+    fireBtn.addEventListener("touchstart", () => handleKey(" "));
+    fireBtn.addEventListener("touchend", () => handleKeyRelease(" "));
+    fireBtn.addEventListener("click", () => {
+      handleKey(" ");
+      setTimeout(() => handleKeyRelease(" "), 100);
+    });
 
-  // --- Missile Button: 'M' Key ---
-  missileBtn.addEventListener("touchstart", () => handleKey("m"));
-  missileBtn.addEventListener("mousedown", () => handleKey("m"));
-  missileBtn.addEventListener("touchend", () => handleKeyRelease("m"));
-  missileBtn.addEventListener("mouseup", () => handleKeyRelease("m"));
-  missileBtn.addEventListener("mouseleave", () => handleKeyRelease("m"));
-  missileBtn.addEventListener("click", () => {
-    handleKey("m");
-   setTimeout(() => handleKeyRelease("m"), 100);
-  });
+    // --- Missile Button: 'M' Key ---
+    missileBtn.addEventListener("touchstart", () => handleKey("m"));
+    missileBtn.addEventListener("touchend", () => handleKeyRelease("m"));
+    missileBtn.addEventListener("click", () => {
+      handleKey("m");
+      setTimeout(() => handleKeyRelease("m"), 100);
+    });
 
-  // --- Nuke Button: 'B' Key ---
-  nukeBtn.addEventListener("touchstart", () => handleKey("b"));
-  nukeBtn.addEventListener("mousedown", () => handleKey("b"));
-  nukeBtn.addEventListener("touchend", () => handleKeyRelease("b"));
-  nukeBtn.addEventListener("mouseup", () => handleKeyRelease("b"));
-  nukeBtn.addEventListener("mouseleave", () => handleKeyRelease("b"));
-  nukeBtn.addEventListener("click", () => {
-    handleKey("b");
-    setTimeout(() => handleKeyRelease("b"), 100);
-  });
+    // --- Nuke Button: 'B' Key ---
+    nukeBtn.addEventListener("touchstart", () => handleKey("b"));
+    nukeBtn.addEventListener("touchend", () => handleKeyRelease("b"));
+    nukeBtn.addEventListener("click", () => {
+      handleKey("b");
+      setTimeout(() => handleKeyRelease("b"), 100);
+    });
   }
 });
 //----------------------------- Event Listeners | Keyboard Input ---------------------------
