@@ -54,6 +54,8 @@ let scaleFactor = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
 let score = 0;
 let highScore = 0;
 let waitingForFirstWave = true;
+let shakeFrames = 0;
+let shakeIntensity = 5; // pixels of max displacement
 
 /*------------------------ Cached Element References ------------------------*/
 
@@ -83,6 +85,11 @@ const alienBulletLaunchSound = new Audio(
   "./audio/Alien_Bullet_Laser_Shoot_SFX.mp3"
 );
 const bulletLaunchSound = new Audio("./audio/Laser_Gun_SoundFX.mp3");
+const engineFireCracklingSound = new Audio(
+  "./audio/Engine_Fire_Crackling_SFX.mp3"
+);
+engineFireCracklingSound.loop = true;
+
 const missileLaunchSound = new Audio("./audio/Missile_Launch_SoundFX.mp3");
 const nukeLaunchSound = new Audio("./audio/Nuclear_Blast_SoundFX.mp3");
 
@@ -110,9 +117,14 @@ class Player {
     this.velocity = { x: 0, y: 0 };
     this.rotation = 0;
     this.opacity = 1;
+    this.isDamaged = false;
+    this.smokeTrail = [];
+    this.smokeTimer = 0;
+
     this.image = null;
     this.width = 0;
     this.height = 0;
+
     this.position = { x: canvas.width / 2, y: canvas.height - 100 };
     this.loadImage(players[currentPlayerIndex].image);
     playerNameEl.textContent = players[currentPlayerIndex].name;
@@ -129,8 +141,6 @@ class Player {
       this.position.x = canvas.width / 2 - this.width / 2;
       this.position.y = canvas.height - this.height - 60; // player height on game start
       updateLivesDisplay();
-      cancelAnimationFrame(animationId);
-      animate();
     };
   }
 
@@ -153,6 +163,39 @@ class Player {
       -(this.position.x + this.width / 2),
       -(this.position.y + this.height / 2)
     );
+
+    // Smoke trail behind the player
+    if (this.isDamaged) {
+      this.smokeTrail.forEach((p) => {
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    // Plane engine fire
+    if (this.isDamaged && playerLives === 1) {
+      const flickerAlpha = 0.3 + Math.random() * 0.3;
+      const flickerRadius = this.width * 0.3;
+
+      ctx.save();
+      ctx.globalAlpha = flickerAlpha;
+      ctx.fillStyle = "orange";
+      ctx.beginPath();
+      ctx.arc(
+        this.position.x + this.width / 2,
+        this.position.y + this.height - 45,
+        flickerRadius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+      ctx.restore();
+    }
     ctx.drawImage(
       this.image,
       this.position.x,
@@ -166,6 +209,44 @@ class Player {
   update() {
     if (this.image) {
       this.draw();
+
+      if (this.isDamaged) {
+        const isFlaming = playerLives === 1;
+
+        const trailParticle = {
+          x: this.position.x + this.width / 2,
+          y: this.position.y + this.height - 10,
+          alpha: 1,
+          radius: Math.random() * 10 + 15,
+          driftX: (Math.random() - 0.5) * 0.5,
+          driftY: -Math.random() * 0.5 - 0.5,
+          color: isFlaming
+            ? `rgba(${200 + Math.random() * 55}, ${Math.random() * 80}, 0, 1)` // Flame (orange/red)
+            : `rgba(30, 30, 30, 0.8)`, // Smoke (dark grey)
+        };
+
+        if (playerLives === 1) {
+          if (engineFireCracklingSound.paused) {
+            engineFireCracklingSound.currentTime = 0;
+            engineFireCracklingSound
+              .play()
+              .catch((err) => console.warn("Fire sound blocked:", err));
+          }
+        } else if (!engineFireCracklingSound.paused) {
+          engineFireCracklingSound.pause();
+        }
+
+        this.smokeTrail.push(trailParticle);
+
+        this.smokeTrail.forEach((p) => {
+          p.x += p.driftX;
+          p.y += p.driftY;
+          p.alpha -= 0.008;
+        });
+
+        this.smokeTrail = this.smokeTrail.filter((p) => p.alpha > 0);
+      }
+
       this.position.x += this.velocity.x;
 
       // clamp to canvas bounds
@@ -663,7 +744,7 @@ class Explosion {
     this.draw();
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
-    this.opacity -= 0.008; // clearing explosion
+    this.opacity -= 0.01; // clearing explosion
   }
 }
 
@@ -901,6 +982,7 @@ function startGame() {
 function applyMasterVolume() {
   alienBulletLaunchSound.volume = 0.05 * masterVolume;
   bulletLaunchSound.volume = 0.2 * masterVolume;
+  engineFireCracklingSound.volume = 0.7 * masterVolume;
   missileLaunchSound.volume = 0.5 * masterVolume;
   nukeLaunchSound.volume = 1.0 * masterVolume;
   playerExplosionSound.volume = 0.7 * masterVolume;
@@ -939,6 +1021,7 @@ function toggleMute() {
   const allSounds = [
     alienBulletLaunchSound,
     bulletLaunchSound,
+    engineFireCracklingSound,
     missileLaunchSound,
     nukeLaunchSound,
     playerExplosionSound,
@@ -1119,6 +1202,7 @@ function restartGame() {
   }
   // Stopping previous animation loop
   cancelAnimationFrame(animationId);
+  animationId = null;
 
   // Prevent restarting the game if it's already over
   if (game.over) return;
@@ -1173,13 +1257,24 @@ function restartGame() {
   score = 0;
   scoreEl.textContent = score;
 
+  player.rotation = 0;
+  player.opacity = 1;
+  player.isDamaged = false;
+  player.smokeTrail = [];
+  player.smokeTimer = 0;
+
+  engineFireCracklingSound.pause();
+  engineFireCracklingSound.currentTime = 0;
+
   // Alien spawn after delay
   waitingForFirstWave = true;
   setTimeout(() => {
     spawnAlienWave();
   }, 2000); // Delay first wave by 2 seconds
 
-  animate();
+  if (!animationId) {
+    animate();
+  }
 }
 
 /*--------------------------- Explosions function  ---------------------------*/
@@ -1187,7 +1282,7 @@ function restartGame() {
 function createExplosions({ object, color, fades }) {
   const colors = Array.isArray(color) ? color : [color || "red"];
 
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 30; i++) {
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
     explosions.push(
@@ -1200,7 +1295,7 @@ function createExplosions({ object, color, fades }) {
           x: (Math.random() - 0.5) * 2,
           y: (Math.random() - 0.5) * 2,
         },
-        radius: Math.random() * 10,
+        radius: Math.random() * 10 + 5,
         color: randomColor,
         fades: true,
       })
@@ -1219,6 +1314,8 @@ function triggerGameOver() {
   gameTitleEl.classList.add("show");
   playerNameEl.textContent = "";
 
+  engineFireCracklingSound.pause();
+  engineFireCracklingSound.currentTime = 0;
   bullets.length = 0;
   missiles.length = 0;
   alienBullets.length = 0;
@@ -1242,7 +1339,7 @@ function handlePlayerAlienCollision(alien, grid) {
 
   // Player explosion
   player.opacity = 0.2;
-  createExplosions({ object: player, color: "white", fades: true });
+  createExplosions({ object: player, color: ["white", "grey"], fades: true });
 
   if (playerExplosionSound) playerExplosionSound.play();
 
@@ -1256,7 +1353,8 @@ function handlePlayerAlienCollision(alien, grid) {
 
   if (playerLives <= 0) {
     player.opacity = 0;
-    createExplosions({ object: player, color: "white", fades: true });
+    createExplosions({ object: player, color: ["white", "grey"], fades: true });
+    shakeFrames = 20;
 
     playerKilledSound.currentTime = 0;
     playerKilledSound.play();
@@ -1269,10 +1367,15 @@ function handlePlayerAlienCollision(alien, grid) {
     player.position.x = canvas.width / 2 - player.width / 2;
     player.position.y = canvas.height - player.height - 60;
     player.opacity = 0.2;
+    player.rotation = 0;
+    player.opacity = 1;
+    player.isDamaged = true;
+    player.smokeTrail = [];
+    player.smokeTimer = 0;
 
     setTimeout(() => {
       player.opacity = 1;
-    }, 1500);
+    }, 500);
 
     // Schedule next alien wave
     waitingForFirstWave = true;
@@ -1282,7 +1385,7 @@ function handlePlayerAlienCollision(alien, grid) {
   }
 }
 
-/*-------------------------------- Functions | Update Lives Display --------------------------------*/
+/*-------------------------------- Functions | Update Lives Icon Display --------------------------------*/
 function updateLivesDisplay() {
   lifeIcons.forEach((icon, index) => {
     //icon.src = players[currentPlayerIndex].image; // always update to current player image
@@ -1292,7 +1395,7 @@ function updateLivesDisplay() {
       icon.src = players[currentPlayerIndex].image; // current player image
     } else {
       //icon.classList.add('lost');
-      icon.style.opacity = 0.2; // dimmed or hidden when lost
+      icon.style.opacity = 0.1; // dimmed or hidden when lost
     }
   });
 }
@@ -1329,6 +1432,16 @@ function animate() {
 
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (shakeFrames > 0) {
+    const dx = (Math.random() - 0.5) * shakeIntensity;
+    const dy = (Math.random() - 0.5) * shakeIntensity;
+    ctx.save();
+    ctx.translate(dx, dy);
+    shakeFrames--;
+  } else {
+    ctx.save();
+  }
 
   // -------------------------------- Functions Animate | Update Stars ----------------------------
   // Update and draw stars
@@ -1441,7 +1554,7 @@ function animate() {
       }, 0);
     } else alienBullet.update();
 
-    /*------------------------------ Functions Animate | Player Collision -------------------------------------*/
+    /*------------------------------ Functions Animate | Player Alien Bullet Collision Handler -------------------------------------*/
 
     // PLAYER Collision Handler | Lose Condition
     if (
@@ -1454,11 +1567,14 @@ function animate() {
         player.opacity = 0.2; // semi-transparent flash on hit
 
         playerLives--; // reduce on life count
+        if (playerLives > 0) {
+          player.isDamaged = true;
+        }
         updateLivesDisplay(); // update life icons
 
         createExplosions({
           object: player,
-          color: "white",
+          color: ["white", "grey"],
           fades: true,
         });
 
@@ -1485,7 +1601,7 @@ function animate() {
           // briefly flash, then recover
           setTimeout(() => {
             player.opacity = 1;
-          }, 1800);
+          }, 500);
         }
       }, 0);
       /*-------------------------------- Functions Animate | GAME OVER Logic --------------------------------*/
@@ -1500,7 +1616,7 @@ function animate() {
       // Player Explosion Color
       createExplosions({
         object: player,
-        color: "white",
+        color: ["white", "grey"],
         fades: true,
       });
     }
@@ -1537,7 +1653,11 @@ function animate() {
           playerLives = 0;
           updateLivesDisplay();
 
-          createExplosions({ object: player, color: "white", fades: true });
+          createExplosions({
+            object: player,
+            color: ["white", "grey"],
+            fades: true,
+          });
           playerKilledSound.currentTime = 0;
           playerKilledSound.play();
           player.opacity = 0;
