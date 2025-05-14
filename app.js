@@ -127,7 +127,7 @@ class Player {
       this.width = image.width * scale;
       this.height = image.height * scale;
       this.position.x = canvas.width / 2 - this.width / 2;
-      this.position.y = canvas.height - this.height - 30;
+      this.position.y = canvas.height - this.height - 60; // player height on game start
       updateLivesDisplay();
       cancelAnimationFrame(animationId);
       animate();
@@ -222,7 +222,6 @@ class Alien {
 /*--------------------------- Grid Class ---------------------------*/
 class Grid {
   constructor(alienType) {
-    this.position = { x: 0, y: 0 };
     this.velocity = { x: 3, y: 0 };
     this.aliens = [];
 
@@ -252,7 +251,10 @@ class Grid {
       }
     }
 
-    this.width = columns * alienSpacingX;
+    this.position = {
+      x: canvas.width / 2 - (columns * alienSpacingX) / 2, // Centre on screen
+      y: 0,
+    };
   }
 
   update() {
@@ -260,9 +262,22 @@ class Grid {
     this.position.y += this.velocity.y;
     this.velocity.y = 0;
 
-    if (this.position.x + this.width >= canvas.width || this.position.x <= 0) {
-      this.velocity.x = -this.velocity.x;
-      this.velocity.y = 30;
+    // Dynamically calculate current grid width based on aliens
+    if (this.aliens.length > 0) {
+      const firstAlien = this.aliens[0];
+      const lastAlien = this.aliens[this.aliens.length - 1];
+
+      this.width =
+        lastAlien.position.x + lastAlien.width - firstAlien.position.x;
+
+      // Detect right or left screen edge
+      if (
+        this.position.x + this.width >= canvas.width ||
+        this.position.x <= 0
+      ) {
+        this.velocity.x = -this.velocity.x;
+        this.velocity.y = 30; // move down
+      }
     }
   }
 }
@@ -574,11 +589,19 @@ class Nuke {
 
     let rippleCount = 0;
     const maxRipples = 2;
-    const rippleDelay = 500; // milliseconds between ripples
+    const rippleDelay = 500;
 
     const startNextRipple = () => {
-      if (rippleCount >= maxRipples) return;
+      if (rippleCount >= maxRipples) {
+        // alien respawn delay logic
+        waitingForFirstWave = true;
+        setTimeout(() => {
+          spawnAlienWave();
+        }, 2000);
+        return;
+      }
 
+      // shockwave ripple logic
       let localRadius = 10;
       let localAlpha = 1;
       const localMax = Math.max(canvas.width, canvas.height);
@@ -640,7 +663,7 @@ class Explosion {
     this.draw();
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
-    this.opacity -= 0.01; // clearing explosion
+    this.opacity -= 0.008; // clearing explosion
   }
 }
 
@@ -690,7 +713,6 @@ function handleKey(key) {
       break;
 
     case "b":
-      console.log("Pressed B key - fire nuke!");
       keys.b.pressed = true;
 
       if (nukesRemaining > 0) {
@@ -877,7 +899,7 @@ function startGame() {
 }
 
 function applyMasterVolume() {
-  alienBulletLaunchSound.volume = 0.2 * masterVolume;
+  alienBulletLaunchSound.volume = 0.05 * masterVolume;
   bulletLaunchSound.volume = 0.2 * masterVolume;
   missileLaunchSound.volume = 0.5 * masterVolume;
   nukeLaunchSound.volume = 1.0 * masterVolume;
@@ -958,8 +980,20 @@ function resizeCanvas() {
     player.width = player.image.width * 0.15 * scaleFactor;
     player.height = player.image.height * 0.15 * scaleFactor;
     player.position.x = canvas.width / 2 - player.width / 2;
-    player.position.y = canvas.height - player.height - 30;
+    player.position.y = canvas.height - player.height - 60;
   }
+  // Reposition all existing grids to centre on new canvas size
+  grids.forEach((grid) => {
+    if (grid.aliens.length > 0) {
+      const firstAlien = grid.aliens[0];
+      const lastAlien = grid.aliens[grid.aliens.length - 1];
+
+      grid.width =
+        lastAlien.position.x + lastAlien.width - firstAlien.position.x;
+
+      grid.position.x = canvas.width / 2 - grid.width / 2;
+    }
+  });
 }
 
 /*--------------------------- Stars ---------------------------*/
@@ -1023,7 +1057,7 @@ function enableBackgroundMusicOnce() {
   window.addEventListener("mousedown", tryPlay);
   window.addEventListener("touchstart", tryPlay);
 }
-/*--------------------------- Spawn Alien Wave ---------------------------------*/
+/*--------------------------- Spawn Alien Wave | Alien Grid Update---------------------------------*/
 function spawnAlienWave() {
   const randomAlienType = aliens[Math.floor(Math.random() * aliens.length)];
   if (randomAlienType) {
@@ -1035,16 +1069,12 @@ function spawnAlienWave() {
   }
 }
 
-// Set waiting flag and spawn grid after delay
+// Setting waiting flag and spawn grid after delay
 waitingForFirstWave = true;
 setTimeout(() => {
   grids.push(new Grid(aliens[Math.floor(Math.random() * aliens.length)]));
   waitingForFirstWave = false;
-}, 2000); // 2 seconds delay
-
-//  if (!isGameAnimating) {
-//   cancelAnimationFrame(animate)
-// }
+}, 2000);
 
 /*--------------------------- Bullet Firing Angle relative to player direction ---------------------------*/
 function getRotatedPoint(px, py, cx, cy, angle) {
@@ -1081,6 +1111,8 @@ function updateLifeIcons() {
 /*--------------------------- restartGame function  ---------------------------*/
 
 function restartGame() {
+  game.over = false;
+
   if (gameOverTimeout) {
     clearTimeout(gameOverTimeout);
     gameOverTimeout = null;
@@ -1088,12 +1120,14 @@ function restartGame() {
   // Stopping previous animation loop
   cancelAnimationFrame(animationId);
 
-  // Start or resume background music
+  // Prevent restarting the game if it's already over
+  if (game.over) return;
+
+  // Restart background music
   backgroundMusic.currentTime = 0;
   backgroundMusic.play();
 
   game.active = true;
-  game.over = false;
   game.showGameOverText = false;
   game.paused = false;
 
@@ -1191,6 +1225,61 @@ function triggerGameOver() {
   explosions.length = 0;
   muzzleFlashes.length = 0;
   muzzleSmokePuffs.length = 0;
+  nukeProjectiles.length = 0;
+}
+
+/*--------------------------- Player Alien Collision Function  ---------------------------*/
+
+function handlePlayerAlienCollision(alien, grid) {
+  // Explode all aliens in the grid
+  grid.aliens.forEach((alien) => {
+    createExplosions({
+      object: alien,
+      color: ["white", "grey"],
+      fades: true,
+    });
+  });
+
+  // Player explosion
+  player.opacity = 0.2;
+  createExplosions({ object: player, color: "white", fades: true });
+
+  if (playerExplosionSound) playerExplosionSound.play();
+
+  // Remove the entire alien grid
+  const gridIndex = grids.indexOf(grid);
+  if (gridIndex > -1) grids.splice(gridIndex, 1);
+
+  // Decrement life and update UI
+  playerLives--;
+  updateLivesDisplay();
+
+  if (playerLives <= 0) {
+    player.opacity = 0;
+    createExplosions({ object: player, color: "white", fades: true });
+
+    playerKilledSound.currentTime = 0;
+    playerKilledSound.play();
+
+    setTimeout(() => {
+      triggerGameOver();
+    }, 1500);
+  } else if (!game.over && playerLives > 0) {
+    // Respawn player (if lives left)
+    player.position.x = canvas.width / 2 - player.width / 2;
+    player.position.y = canvas.height - player.height - 60;
+    player.opacity = 0.2;
+
+    setTimeout(() => {
+      player.opacity = 1;
+    }, 1500);
+
+    // Schedule next alien wave
+    waitingForFirstWave = true;
+    setTimeout(() => {
+      spawnAlienWave();
+    }, 2000);
+  }
 }
 
 /*-------------------------------- Functions | Update Lives Display --------------------------------*/
@@ -1268,19 +1357,21 @@ function animate() {
 
   /*-------------------------------- Functions Animate | Update Player  --------------------------------*/
   // Update player, movement and control
-  player.update();
-  if (keys.a.pressed && player.position.x >= 0) {
-    player.velocity.x = -10;
-    player.rotation = -0.2;
-  } else if (
-    keys.d.pressed &&
-    player.position.x + player.width <= canvas.width
-  ) {
-    player.velocity.x = 10;
-    player.rotation = 0.2;
-  } else {
-    player.velocity.x = 0;
-    player.rotation = 0;
+  if (playerLives > 0 && !game.over) {
+    player.update();
+    if (keys.a.pressed && player.position.x >= 0) {
+      player.velocity.x = -10;
+      player.rotation = -0.2;
+    } else if (
+      keys.d.pressed &&
+      player.position.x + player.width <= canvas.width
+    ) {
+      player.velocity.x = 10;
+      player.rotation = 0.2;
+    } else {
+      player.velocity.x = 0;
+      player.rotation = 0;
+    }
   }
 
   /*-------------------------------- Functions Animate | Update Bullets  --------------------------------*/
@@ -1360,7 +1451,7 @@ function animate() {
     ) {
       setTimeout(() => {
         alienBullets.splice(index, 1);
-        player.opacity = 0.5; // semi-transparent flash on hit
+        player.opacity = 0.2; // semi-transparent flash on hit
 
         playerLives--; // reduce on life count
         updateLivesDisplay(); // update life icons
@@ -1394,10 +1485,9 @@ function animate() {
           // briefly flash, then recover
           setTimeout(() => {
             player.opacity = 1;
-          }, 1000);
+          }, 1800);
         }
       }, 0);
-
       /*-------------------------------- Functions Animate | GAME OVER Logic --------------------------------*/
       // GAME OVER Render Logic
       if (playerLives <= 0 && game.over && !game.over && !gameOverTimeout) {
@@ -1459,7 +1549,21 @@ function animate() {
         }
       }
 
-/*-------------------------------- Functions Animate | Bullet Collision --------------------------------*/
+      /*------------------------------ Functions Animate | Player Collision with Alien -------------------------------------*/
+      grids.forEach((grid) => {
+        grid.aliens.forEach((alien) => {
+          if (
+            alien.position.y + alien.height >= player.position.y && // bottom of alien touches top of player
+            alien.position.y <= player.position.y + player.height && // alien overlaps vertically
+            alien.position.x + alien.width >= player.position.x && // alien overlaps horizontally
+            alien.position.x <= player.position.x + player.width
+          ) {
+            handlePlayerAlienCollision(alien, grid); // Only pass the grid now
+          }
+        });
+      });
+
+      /*-------------------------------- Functions Animate | Bullet Collision --------------------------------*/
       bullets.forEach((projectile, j) => {
         if (
           projectile.position.y - projectile.radius <=
