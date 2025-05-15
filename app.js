@@ -29,6 +29,7 @@ const high_score_key = "high_score";
 
 /*---------------------------- Variables (state) ----------------------------*/
 let animationId;
+let isAnimating = false;
 let currentPlayerIndex = 0;
 let canvas, ctx;
 
@@ -1201,8 +1202,11 @@ function restartGame() {
     gameOverTimeout = null;
   }
   // Stopping previous animation loop
-  cancelAnimationFrame(animationId);
-  animationId = null;
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+    isAnimating = false;
+  }
 
   // Prevent restarting the game if it's already over
   if (game.over) return;
@@ -1426,7 +1430,12 @@ function updateNukeDisplay() {
 
 function animate() {
   // Store ID, game update and draw black background
-  animationId = requestAnimationFrame(animate);
+  if (isAnimating) return;
+  isAnimating = true;
+  animationId = requestAnimationFrame(() => {
+    isAnimating = false;
+    animate();
+  });
 
   if (game.flashing) return; // skip during nuke flash
 
@@ -1915,29 +1924,15 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   if (fireBtn && missileBtn && nukeBtn) {
-    // --- Fire Button: Spacebar ---
-    fireBtn.addEventListener("touchstart", () => handleKey(" "));
-    fireBtn.addEventListener("touchend", () => handleKeyRelease(" "));
-    fireBtn.addEventListener("click", () => {
-      handleKey(" ");
-      setTimeout(() => handleKeyRelease(" "), 100);
-    });
+    // Unify all mobile and desktop inputs under pointer events
+    fireBtn.addEventListener("pointerdown", () => handleKey(" "));
+    fireBtn.addEventListener("pointerup", () => handleKeyRelease(" "));
 
-    // --- Missile Button: 'M' Key ---
-    missileBtn.addEventListener("touchstart", () => handleKey("m"));
-    missileBtn.addEventListener("touchend", () => handleKeyRelease("m"));
-    missileBtn.addEventListener("click", () => {
-      handleKey("m");
-      setTimeout(() => handleKeyRelease("m"), 100);
-    });
+    missileBtn.addEventListener("pointerdown", () => handleKey("m"));
+    missileBtn.addEventListener("pointerup", () => handleKeyRelease("m"));
 
-    // --- Nuke Button: 'B' Key ---
-    nukeBtn.addEventListener("touchstart", () => handleKey("b"));
-    nukeBtn.addEventListener("touchend", () => handleKeyRelease("b"));
-    nukeBtn.addEventListener("click", () => {
-      handleKey("b");
-      setTimeout(() => handleKeyRelease("b"), 100);
-    });
+    nukeBtn.addEventListener("pointerdown", () => handleKey("b"));
+    nukeBtn.addEventListener("pointerup", () => handleKeyRelease("b"));
   }
 });
 //----------------------------- Event Listeners | Keyboard Input ---------------------------
