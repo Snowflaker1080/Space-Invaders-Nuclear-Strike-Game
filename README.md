@@ -261,11 +261,20 @@ PWA (Progressive Web App)
 
 This project uses free and open-source assets. Full credit with thanks is given below to the original creators:
 
+👾 Game Development Tutorials
+- Thanks to Chris Courses for foundational JavaScript game development tutorials, particularly around canvas rendering, animation loops, and object-oriented structure. These greatly influenced the codebase architecture and design logic.
+
+⸻
+
 🎵 Audio
 
 Intro Background Music
 
 - “Intro_Background_SFX.mp3” by Pixabay Music – Free for commercial use
+
+Game Screen Backgroun Music
+
+- “Epic Space Battle Loop” by Fesliyan Studios – Free with attribution
 
 Explosion Sound Effects
 
@@ -287,25 +296,28 @@ Nuke Detonation Sound
 
 🖼 Visuals
 
-Player Jet Sprite
+How to Play Screen Image
 
-- Custom sprite edited from “Spaceship” asset by Kenney.nl – CC0
+- Generative AI image created using Grok AI – Used under fair use for educational and portfolio demonstration purposes.
 
-Alien Sprites
+Player Jet & Alien Sprites
 
-- “Pixel Aliens Pack” by CraftPix.net – Free version with attribution
+- Sourced from CleanPNG and Pinterest – Used under fair use for non-commercial educational development.
+- Custom sprite edited from “Spaceship” asset by Kenney.nl – CC0.
+- “Pixel Aliens Pack” by CraftPix.net – Free version with attribution.
 
 Nuclear Weapon Image
 
-- Derived from public domain icon, modified under CC0
+- Derived from public domain icon, modified under CC0.
 
 Starfield Background
 
-- Procedurally generated via JavaScript (no external asset)
+- Based on Codepen canvas animation by @sohilananthR – Referenced with respect to original creator.
 
 Buttons and Icons
 
-- Emoji characters used under Unicode standard
+- Emoji characters used under Unicode standard.
+- Alien emoji Sourced from Emojipedia – Used under the Unicode Standard, which permits emoji use in digital projects.
 
 ⸻
 
