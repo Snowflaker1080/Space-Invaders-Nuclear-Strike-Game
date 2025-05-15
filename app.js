@@ -218,8 +218,8 @@ class Player {
           y: this.position.y + this.height - 10,
           alpha: 1,
           radius: Math.random() * 10 + 15,
-          driftX: (Math.random() - 0.5) * 0.5,
-          driftY: -Math.random() * 0.5 - 0.5,
+          driftX: (Math.random() - 0.5) * 1,
+          driftY: -Math.random() * 0.5 + 1,
           color: isFlaming
             ? `rgba(${200 + Math.random() * 55}, ${Math.random() * 80}, 0, 1)` // Flame (orange/red)
             : `rgba(30, 30, 30, 0.8)`, // Smoke (dark grey)
