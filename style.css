@@ -204,6 +204,16 @@ body {
     }
 }
 
+#gameCanvas {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -10;
+  }
+
 #scoreContainer {
     position: absolute;
     top: 6%;
@@ -232,34 +242,16 @@ body {
     z-index: 999; /* Always on top */
 }
 
-#gameContainer {
-    top: 5%;
-    position: relative;
-    width: 100vw;
-    height:100vh;
-}
-
-#gameCanvas {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -10;
-  }
-
-#gameTitle {
+#gameOverContainer {
     position: absolute;
-    top: 10%;
-    left: 41%;  
-    font-family: 'Arial', sans-serif;
-    font-size: clamp(24px, 5vw, 48px);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
     color: white;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
-    z-index: 1000; /* Make sure it's on top */
     opacity: 0;
-    pointer-events: none;
+    pointer-events: none; 
+    z-index: 20;
 }
 
 /* Show and animate only when game is over */
@@ -272,16 +264,42 @@ body {
     display: none;
 }
 
+#gameTitle {
+  position: absolute;
+  bottom: 150%;
+  left: 25%;
+  text-align: center;
+  color: white;
+  z-index: 10;
+  font-size: clamp(16px, 10vw, 30px);
+  font-family: 'Arial', sans-serif;
+}
+
+
+#gameOverContainer.show {
+    animation: fadeScaleIn 1s ease-out forwards;
+}
+
+#gameOverText {
+    font-family: 'Arial', sans-serif;
+    font-size: clamp(64px, 3vw, 24px);
+    margin: 0;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+}
+
+#restartText {
+    font-family: 'Arial', sans-serif;
+    font-size: clamp(10px, 3vw, 14px);
+    margin-top: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
 #controls {
     margin-top: 5px;  
     text-align: center;
-}
-
-.game-ui {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
 }
 
 #restartGameBtn {
@@ -339,39 +357,6 @@ body {
 
 #returnHomeBtn:hover {
     background-color: #0056b3;
-}
-
-#gameOverContainer {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    color: white;
-    opacity: 0;
-    pointer-events: none; 
-    z-index: 20;
-}
-
-#gameOverContainer.show {
-    animation: fadeScaleIn 1s ease-out forwards;
-}
-
-#gameOverText {
-    font-family: 'Arial', sans-serif;
-    font-size: clamp(64px, 3vw, 24px);
-    margin: 0;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
-}
-
-#restartText {
-    font-family: 'Arial', sans-serif;
-    font-size: clamp(10px, 3vw, 14px);
-    margin-top: 10px;
-}
-
-.hidden {
-    display: none;
 }
 
 /* Lives container positioned near the restart button */

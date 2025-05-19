@@ -66,6 +66,7 @@ const scoreEl = document.getElementById("scoreEl");
 const highScoreEl = document.getElementById("highScoreEl");
 const switchBtn = document.getElementById("switchPlayerBtn");
 const restartBtn = document.getElementById("restartGameBtn");
+const returnHomeBtn = document.getElementById("returnHomeBtn");
 const playerNameEl = document.getElementById("playerName");
 const gameTitleEl = document.getElementById("gameTitle");
 const gameOverContainer = document.getElementById("gameOverContainer");
@@ -1871,74 +1872,100 @@ window.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("orientationchange", resizeCanvas);
 
   animate();
-
-  // Volume Control ----exists & run only on game.html
-  if (volumeUpBtn && volumeDownBtn && muteBtn) {
-    volumeUpBtn.addEventListener("click", () => {
-      increaseVolume();
-      animateButton(volumeUpBtn);
-    });
-
-    volumeDownBtn.addEventListener("click", () => {
-      decreaseVolume();
-      animateButton(volumeDownBtn);
-    });
-
-    muteBtn.addEventListener("click", () => {
-      toggleMute();
-      animateButton(muteBtn);
-    });
-  }
-  //----- Control Buttons ---- exsists & run only on game.html
-  if (switchBtn && restartBtn) {
-    switchBtn.addEventListener("click", () => player.switchPlayer());
-    restartBtn.addEventListener("click", restartGame);
-  }
-
-  //-----Event Listeners | Mobile Button Presses - exists & run only on game.html
-
-  if (leftBtn && rightBtn) {
-    leftBtn.addEventListener("touchstart", () => handleHoldStart("a", leftBtn));
-    leftBtn.addEventListener("mousedown", () => handleHoldStart("a", leftBtn));
-    leftBtn.addEventListener("touchend", () => handleHoldEnd("a", leftBtn));
-    leftBtn.addEventListener("mouseup", () => handleHoldEnd("a", leftBtn));
-    leftBtn.addEventListener("mouseleave", () => handleHoldEnd("a", leftBtn));
-    leftBtn.addEventListener("click", () => {
-      handleKey("a");
-      setTimeout(() => handleKeyRelease("a"), 100);
-    });
-
-    rightBtn.addEventListener("touchstart", () =>
-      handleHoldStart("d", rightBtn)
-    );
-    rightBtn.addEventListener("mousedown", () =>
-      handleHoldStart("d", rightBtn)
-    );
-    rightBtn.addEventListener("touchend", () => handleHoldEnd("d", rightBtn));
-    rightBtn.addEventListener("mouseup", () => handleHoldEnd("d", rightBtn));
-    rightBtn.addEventListener("mouseleave", () => handleHoldEnd("d", rightBtn));
-    rightBtn.addEventListener("click", () => {
-      handleKey("d");
-      setTimeout(() => handleKeyRelease("d"), 100);
-    });
-  }
-
-  if (fireBtn && missileBtn && nukeBtn) {
-    // Unify all mobile and desktop inputs under pointer events
-    fireBtn.addEventListener("pointerdown", () => handleKey(" "));
-    fireBtn.addEventListener("pointerup", () => handleKeyRelease(" "));
-
-    missileBtn.addEventListener("pointerdown", () => handleKey("m"));
-    missileBtn.addEventListener("pointerup", () => handleKeyRelease("m"));
-
-    nukeBtn.addEventListener("pointerdown", () => handleKey("b"));
-    nukeBtn.addEventListener("pointerup", () => handleKeyRelease("b"));
-  }
 });
-//----------------------------- Event Listeners | Keyboard Input ---------------------------
+
+// Volume Control ----exists & run only on game.html
+if (volumeUpBtn && volumeDownBtn && muteBtn) {
+  volumeUpBtn.addEventListener("click", () => {
+    increaseVolume();
+    animateButton(volumeUpBtn);
+  });
+
+  volumeDownBtn.addEventListener("click", () => {
+    decreaseVolume();
+    animateButton(volumeDownBtn);
+  });
+
+  muteBtn.addEventListener("click", () => {
+    toggleMute();
+    animateButton(muteBtn);
+  });
+}
+//----- Control Buttons ---- exists & run only on game.html
+// if (switchBtn && restartBtn && returnHomeBtn) {
+//   switchBtn.addEventListener("click", () => player.switchPlayer());
+//   switchBtn.addEventListener("click", () => {handleKey("a");
+//     setTimeout(() => handleKeyRelease("a"), 100);
+//   restartBtn.addEventListener("click", restartGame);
+//   returnHomeBtn.addEventListener("click",() => { window.location.href = 'index.html'} )
+// });
+
+if (switchBtn && restartBtn && returnHomeBtn) {
+  switchBtn.addEventListener("click", () => player.switchPlayer());
+  switchBtn.addEventListener("pointerdown", () => player.switchPlayer());
+  switchBtn.addEventListener("pointerup", () => player.switchPlayer());
+
+  returnHomeBtn.addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
+  returnHomeBtn.addEventListener("pointerdown", () => {
+    window.location.href = "index.html";
+  });
+  returnHomeBtn.addEventListener("pointerup", () => {
+    window.location.href = "index.html";
+  });
+  restartBtn.addEventListener("click", () => {
+    //if (!game.over) return; // prevent mid-game restarts
+    canvas.focus();
+    restartGame();
+  });
+}
+
+//-----Event Listeners | Mobile Button Presses - exists & run only on game.html
+
+if (leftBtn && rightBtn) {
+  leftBtn.addEventListener("touchstart", () => handleHoldStart("a", leftBtn));
+  leftBtn.addEventListener("mousedown", () => handleHoldStart("a", leftBtn));
+  leftBtn.addEventListener("touchend", () => handleHoldEnd("a", leftBtn));
+  leftBtn.addEventListener("mouseup", () => handleHoldEnd("a", leftBtn));
+  leftBtn.addEventListener("mouseleave", () => handleHoldEnd("a", leftBtn));
+  leftBtn.addEventListener("click", () => {
+    handleKey("a");
+    setTimeout(() => handleKeyRelease("a"), 100);
+  });
+
+  rightBtn.addEventListener("touchstart", () => handleHoldStart("d", rightBtn));
+  rightBtn.addEventListener("mousedown", () => handleHoldStart("d", rightBtn));
+  rightBtn.addEventListener("touchend", () => handleHoldEnd("d", rightBtn));
+  rightBtn.addEventListener("mouseup", () => handleHoldEnd("d", rightBtn));
+  rightBtn.addEventListener("mouseleave", () => handleHoldEnd("d", rightBtn));
+  rightBtn.addEventListener("click", () => {
+    handleKey("d");
+    setTimeout(() => handleKeyRelease("d"), 100);
+  });
+}
+
+if (fireBtn && missileBtn && nukeBtn) {
+  // Mobile and desktop inputs unify under pointer events
+  fireBtn.addEventListener("pointerdown", () => handleKey(" "));
+  fireBtn.addEventListener("pointerup", () => handleKeyRelease(" "));
+
+  missileBtn.addEventListener("pointerdown", () => handleKey("m"));
+  missileBtn.addEventListener("pointerup", () => handleKeyRelease("m"));
+
+  nukeBtn.addEventListener("pointerdown", () => handleKey("b"));
+  nukeBtn.addEventListener("pointerup", () => handleKeyRelease("b"));
+}
+
+//---------- ------------------- Event Listeners | Keyboard Input ---------------------------
 
 addEventListener("keydown", (event) => {
-  if (!player) return;
+  if (
+  event.code === "Space" &&
+  document.activeElement === restartBtn
+){
+  event.preventDefault();
+}
   handleKey(event.key);
 });
 

@@ -1,94 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <title>Space Invaders</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" defer src="./data.js"></script>
+    <script type="module" defer src="./app.js"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <title>Space Invaders</title>
-  <link rel="stylesheet" href="style.css">
-  <script type="module" defer src="./data.js"></script>
-  <script type="module" defer src="./app.js"></script>
-
-</head>
-
-<body>
-  <main>
-
+  <body>
+    <main>
       <canvas id="gameCanvas">
         Your browser does not support the canvas element.
       </canvas>
 
-    <div>
-      <p id="scoreContainer">
-        Score: <span id="scoreEl">0</span>
-      </p>
-    </div>
+      <div>
+        <p id="scoreContainer">Score: <span id="scoreEl">0</span></p>
+      </div>
 
-    <div>
-    <p id="highScoreContainer">
-      High Score: <span id="highScoreEl">0</span>
-    </div>
-
-    <div id="gameContainer">
-      <h1 id="gameTitle" class="hidden">Space Invaders</h1>
-
-
-
-      <div class="game-ui">
-        <button id="returnHomeBtn">🏠 Home</button>
-        <script>
-          document.getElementById('returnHomeBtn').addEventListener('click', () => {
-              window.location.href = 'index.html';
-          });
-          </script>
-    </div>
+      <div>
+        <p id="highScoreContainer">
+          High Score: <span id="highScoreEl">0</span>
+        </p>
+      </div>
 
       <div id="gameOverContainer" class="hidden">
+        <h1 id="gameTitle" class="hidden">Space Invaders</h1>
         <h2 id="gameOverText">GAME OVER</h2>
         <p id="restartText">Press 🔁 Restart Game</p>
       </div>
 
-    </div>
-
-    <div id="controls">
-      <button id="restartGameBtn">🔁 Restart Game</button>
+      <div id="controls">
+        <button id="restartGameBtn">🔁 Restart Game</button>
+        <button id="returnHomeBtn">🏠 Home</button>
+      </div>
 
       <div id="livesContainer">
-        <img class="life-icon">
-        <img class="life-icon">
-        <img class="life-icon">
+        <img class="life-icon" />
+        <img class="life-icon" />
+        <img class="life-icon" />
       </div>
 
       <div id="nukeContainer">
-        <img class="nuke-icon">
-        <img class="nuke-icon">
-        <img class="nuke-icon">
+        <img class="nuke-icon" />
+        <img class="nuke-icon" />
+        <img class="nuke-icon" />
       </div>
 
-      <span id="playerName"></span>
-      <button id="switchPlayerBtn">✈️</button>
-    </div>
+      <div>
+        <span id="playerName"></span>
+        <button id="switchPlayerBtn">✈️</button>
+      </div>
 
-    <div id="mobileCtrLeftContainer">
-      <button id="leftBtn">◀️</button>
-      <button id="rightBtn">▶️</button>
-    </div>
+      <div id="mobileCtrLeftContainer">
+        <button id="leftBtn">◀️</button>
+        <button id="rightBtn">▶️</button>
+      </div>
 
-    <div id="mobileCtrRightContainer">
-      <button id="fireBtn">🔥</button>
-      <button id="missileBtn">💥</button>
-      <button id="nukeBtn">💣</button>
-    </div>
+      <div id="mobileCtrRightContainer">
+        <button id="fireBtn">🔥</button>
+        <button id="missileBtn">💥</button>
+        <button id="nukeBtn">💣</button>
+      </div>
 
       <div id="volumeContainer">
         <button id="volumeUpBtn">🔊</button>
-        <span id="volumeDisplay">40</span> 
+        <span id="volumeDisplay">40</span>
         <button id="volumeDownBtn">🔉</button>
-      <button id="muteBtn">🔇</button>
-
-  </main>
-
-</body>
-
+        <button id="muteBtn">🔇</button>
+      </div>
+    </main>
+  </body>
 </html>
