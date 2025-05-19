@@ -338,6 +338,12 @@ class Grid {
       x: canvas.width / 2 - (columns * alienSpacingX) / 2, // Centre on screen
       y: 0,
     };
+
+    //Offset each alien relative to the grid position
+    this.aliens.forEach((alien) => {
+      alien.position.x += this.position.x;
+      alien.position.y += this.position.y;
+    });
   }
 
   update() {
@@ -1146,6 +1152,8 @@ function enableBackgroundMusicOnce() {
 function spawnAlienWave() {
   const randomAlienType = aliens[Math.floor(Math.random() * aliens.length)];
   if (randomAlienType) {
+    const grid = new Grid(randomAlienType);
+    
     grids.push(new Grid(randomAlienType));
     waitingForFirstWave = false;
     console.log("Alien wave spawned");
@@ -1916,8 +1924,9 @@ if (switchBtn && restartBtn && returnHomeBtn) {
   });
   restartBtn.addEventListener("click", () => {
     //if (!game.over) return; // prevent mid-game restarts
-    canvas.focus();
     restartGame();
+    canvas.focus();
+    restartBtn.blur();
   });
 }
 
