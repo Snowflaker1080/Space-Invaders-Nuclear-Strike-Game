@@ -1,6 +1,6 @@
 🛸  Space Invaders: Nuclear Assault
 
-Deployment Link: https://snowflaker1080.github.io/Game-Project-Space-Invaders/
+Deployment Link: Space Invaders: Nuclear Assault
 
 ⸻
 	
