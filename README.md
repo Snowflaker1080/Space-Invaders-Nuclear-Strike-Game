@@ -1,6 +1,6 @@
 🛸  Space Invaders: Nuclear Assault
 
-Deployment Link: Space Invaders: Nuclear Assault
+Deployment Link: [Space Invaders: Nuclear Assault](https://snowflaker1080.github.io/Space-Invaders-Nuclear-Strike-Game/)
 
 ⸻
 	
@@ -91,7 +91,7 @@ Your goal is to eliminate all alien fleets while avoiding incoming fire. Strateg
 
 You can play the game instantly via GitHub Pages:
 
-➡️ https://snowflaker1080.github.io/space-invaders-game-project
+➡️ https://snowflaker1080.github.io/Space-Invaders-Nuclear-Strike-Game/
 
 
 ⸻
