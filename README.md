@@ -1,4 +1,4 @@
-🛸  Space Invaders: Nuclear Assault
+Space Invaders: Nuclear Assault
 
 Deployment Link: [Space Invaders: Nuclear Assault](https://snowflaker1080.github.io/Space-Invaders-Nuclear-Strike-Game/)
 
@@ -22,7 +22,7 @@ GAME PLAY SCREEN | Desktop & Mobile
 
 	
 
-🛸 SPACE INVADERS: Nuclear Assault
+SPACE INVADERS: Nuclear Assault
 
 Space Invaders: Nuclear Assault is a fast-paced, retro-inspired browser game built with HTML5, CSS, and JavaScript. 
 Pilot a fighter jet to defend Earth from waves of alien invaders using bullets, missiles, and nukes. 
@@ -49,7 +49,7 @@ FEATURES
 ⸻
 
 
- 🎮 HOW TO PLAY
+HOW TO PLAY
  
 Controls (Keyboard)
 - A – Move Left
@@ -225,7 +225,7 @@ Animated Title Screen & Credits
 
 ⸻
 
-💻 Technical Improvements
+Technical Improvements
 
 Modular Code Refactoring
 - Break the codebase into more reusable modules (e.g., GameEngine.js, UIManager.js, SoundManager.js) for scalability.
@@ -263,7 +263,7 @@ Game Development Tutorials
 
 ⸻
 
-🎵 Audio
+Audio
 
 Intro Background Music
 
@@ -328,7 +328,7 @@ If you are an original creator of any asset and wish to request removal or corre
 
 ⸻
 
-©️ Copyright & Legal Disclaimer
+©Copyright & Legal Disclaimer
 
 This project, Space Invaders: Nuclear Assault, is a student-led educational project developed as part of a learning journey in web development. It is not affiliated with, endorsed by, or associated with any existing game franchise, including “Space Invaders”™ by Taito Corporation. All characters, concepts, and assets used are either original, free-to-use with attribution, or adapted under permissive licenses (e.g. CC0, public domain, or free for commercial use).
 
@@ -348,7 +348,7 @@ This project was built from scratch with no prior professional experience, and i
 
 ⸻
 
-⚖️ Legal Use & Restrictions
+Legal Use & Restrictions
 
 •	No copyright infringement intended.
 •	Educational use only.
