@@ -34,16 +34,16 @@ No libraries, no frameworks—just pure JavaScript and DOM manipulation. Playabl
 ⸻
 
 
-🚀 FEATURES
+FEATURES
 
-- 👾 Classic alien swarm attack patterns
-- 🎯 Three-tier weapon system: bullets, missiles, and nukes
-- 🔊 Dynamic sound effects and looping background music
-- 🕹 Keyboard and mobile touch controls
-- 🧠 Game over and win logic with restart functionality
-- 🏆 Score system with persistent high score tracking
-- 🎨 Starscape background and particle effects
-- 🔁 Switch between multiple player characters mid-game
+- Classic alien swarm attack patterns
+- Three-tier weapon system: bullets, missiles, and nukes
+- Dynamic sound effects and looping background music
+- Keyboard and mobile touch controls
+- Game over and win logic with restart functionality
+- Score system with persistent high score tracking
+- Starscape background and particle effects
+- Switch between multiple player characters mid-game
 
 
 ⸻
@@ -70,7 +70,7 @@ Your goal is to eliminate all alien fleets while avoiding incoming fire. Strateg
 ⸻
 
 
-📦 INSTALLATION
+INSTALLATION
 
 1.	Clone the repository:
   
@@ -81,22 +81,21 @@ Your goal is to eliminate all alien fleets while avoiding incoming fire. Strateg
 
 		index.html
 
-✅ No dependencies or installations required. Works offline after first load.
+No dependencies or installations required. Works offline after first load.
 
 
 ⸻
 
 
-🌐 PLAY ONLINE
+ PLAY ONLINE
 
 You can play the game instantly via GitHub Pages:
 
-➡️ https://snowflaker1080.github.io/Space-Invaders-Nuclear-Strike-Game/
+➡ https://snowflaker1080.github.io/Space-Invaders-Nuclear-Strike-Game/
 
 ⸻
 
-
-🛠 TECH STACK	
+TECH STACK	
 
 - HTML5 Canvas – Game rendering
 - CSS3 – UI styling and responsiveness
@@ -105,8 +104,7 @@ You can play the game instantly via GitHub Pages:
 
 ⸻
 
-
- 🤝 CONTRIBUTING
+CONTRIBUTING
 
 Have ideas for new weapons, alien types, or game modes? Contributions are welcome!
 
@@ -121,14 +119,14 @@ Please ensure your code is clean and well-commented.
 ⸻
 
 
-🧠 ENGINEERING SUMMARY & DEVELOPMENT INSIGHTS
+ENGINEERING SUMMARY & DEVELOPMENT INSIGHTS
 
 This project was built as part of an applied learning initiative focused on front-end software engineering and 2D browser-based game development. 
 The goal was to design and implement a full-featured arcade-style shooter using vanilla JavaScript, HTML5 <canvas>, and CSS — without external frameworks — to gain fluency in low-level browser APIs, real-time rendering, and interactive UI systems.
 
 
 
-🧩 Systems Design & Technical Concepts
+Systems Design & Technical Concepts
 
 Custom Game Loop Architecture
 - Engineered a frame-synchronized game loop using requestAnimationFrame, enabling smooth animations, time-based updates, and decoupled draw logic.
@@ -159,7 +157,7 @@ Responsive UI & Visual Design
 
 
 
-📈 Engineering Learnings & Outcomes
+Engineering Learnings & Outcomes
 	
  - Applied object-oriented programming principles in a real-time system
 	
@@ -180,9 +178,9 @@ This project demonstrates the practical integration of software engineering prin
 
 
 
-🔮 POTENTIAL FUTURE IMPROVEMENTS
+POTENTIAL FUTURE IMPROVEMENTS
 
-🎮 Gameplay Features
+Gameplay Features
 
 Power-Ups & Upgrades
 - Introduce collectible power-ups (e.g., faster fire rate, shield, double damage) or a weapon upgrade system tied to score or kill streaks.
@@ -201,7 +199,7 @@ Multiplayer (Local or Online)
 
 ⸻
 
-🧠 AI & Procedural Systems
+AI & Procedural Systems
 
 Alien Movement AI
 - Use basic pathfinding or steering behaviours instead of rigid grid formations.
@@ -214,7 +212,7 @@ Difficulty Scaling
 
 ⸻
 
-🎨 UI/UX & Audio Enhancements
+UI/UX & Audio Enhancements
 
 Pause Menu & Settings Panel
 - Include a pause button with volume sliders, control remapping, and game instructions.
@@ -240,7 +238,7 @@ Save Game State
 
 ⸻
 
-🚀 Stretch Goals
+Stretch Goals
 
 Touch Gestures & Accelerometer Support
 
@@ -256,11 +254,11 @@ PWA (Progressive Web App)
 
 ⸻
 
-🙏 ATTRIBUTION
+ATTRIBUTION
 
 This project uses free and open-source assets. Full credit with thanks is given below to the original creators:
 
-👾 Game Development Tutorials
+Game Development Tutorials
 - Thanks to Chris Courses for foundational JavaScript game development tutorials, particularly around canvas rendering, animation loops, and object-oriented structure. These greatly influenced the codebase architecture and design logic.
 
 ⸻
@@ -293,7 +291,7 @@ Nuke Detonation Sound
 
 ⸻
 
-🖼 Visuals
+Visuals
 
 How to Play Screen Image
 
@@ -320,7 +318,7 @@ Buttons and Icons
 
 ⸻
 
-📜 Fonts
+Fonts
 
 UI Font
 
@@ -336,7 +334,7 @@ This project, Space Invaders: Nuclear Assault, is a student-led educational proj
 
 ⸻
 
-👨‍💻 About the Developer
+About the Developer
 
 This game was created by a rookie software developer as part of a General Assembly coding bootcamp. It is the result of independent study and experimentation using vanilla JavaScript, HTML5, and CSS3. The project demonstrates core programming concepts such as:
 
@@ -352,10 +350,10 @@ This project was built from scratch with no prior professional experience, and i
 
 ⚖️ Legal Use & Restrictions
 
-•	🚫 No copyright infringement intended.
-•	📚 Educational use only.
-•	✅ All third-party assets are used under their respective licenses and fully attributed above.
-•	📎 This game is not for resale, monetisation, or distribution beyond personal and educational use.
+•	No copyright infringement intended.
+•	Educational use only.
+•	All third-party assets are used under their respective licenses and fully attributed above.
+•	This game is not for resale, monetisation, or distribution beyond personal and educational use.
 
 If any issues arise regarding asset usage or credit, please submit a GitHub issue and appropriate action will be taken.
 
